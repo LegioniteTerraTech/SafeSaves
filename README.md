@@ -1,2 +1,2 @@
 # SafeSaves
- A safe and simple way to save your mod serialization without crashes
+ A safe and simple way to save your TerraTech mod serialization without crashes
