@@ -1,0 +1,9 @@
+﻿{
+  "Id": "legionite.safesaves",
+  "DisplayName": "Safe Saves",
+  "Author": "Legionite",
+  "Version": "0.1.0",
+  "Enable": true,
+  "AssemblyName": "SafeSaves.dll",
+  "EntryMethod": "SafeSaves.ManSafeSaves.Init"
+}
