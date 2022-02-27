@@ -42,6 +42,7 @@ namespace SafeSaves
         }
     }
 
+#if STEAM
     public class KickStartSafeSaves : ModBase
     {
 
@@ -55,6 +56,7 @@ namespace SafeSaves
 
         public override void EarlyInit()
         {
+            Debug.Log("KickStartSafeSaves - INITEarly");
             if (oInst == null)
             {
                 oInst = this;
@@ -76,21 +78,10 @@ namespace SafeSaves
             ManSafeSaves.ignoreSaving = true;
         }
     }
+#endif
 
     public class Patches
     {
-        /*
-        // Where it all happens
-        [HarmonyPatch(typeof(Module))]
-        [HarmonyPatch("Store")]//On Control
-        private static class PatchControlSystem
-        {
-            
-            private static void Postfix(Module __instance)
-            {
-            }
-        }
-        */
         [HarmonyPatch(typeof(ModeAttract))]
         [HarmonyPatch("SetupTechs")]// Setup main menu techs
         internal static class Subscribe

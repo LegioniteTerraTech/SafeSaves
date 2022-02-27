@@ -65,7 +65,9 @@ namespace SafeSaves
             }
             DirectoryInfo di = new DirectoryInfo(Assembly.GetExecutingAssembly().Location);
             DLLDirectory = di.Parent.ToString();
-            SavesDirectory = di.Parent.ToString() + up + "SafeSaves";
+            DirectoryInfo game = new DirectoryInfo(Application.dataPath);
+            game = game.Parent;
+            SavesDirectory = game.ToString() + up + "SafeSaves";
             ValidateDirectory(SavesDirectory);
             inst = new GameObject("ManSafeSaves").AddComponent<ManSafeSaves>();
             ignoreSaving = false;
