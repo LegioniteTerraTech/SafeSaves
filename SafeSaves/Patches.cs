@@ -9,7 +9,41 @@ namespace SafeSaves
 {
     public static class SaveDataExts
     {
+        // TECHS (handled automatically)
         /// <summary>
+        /// This is only to extract SafeSave stored modules & Tank data for storage elsewhere.
+        /// <para>
+        /// MAKE SURE TO PUT THIS IN A TRY-CATCH BLOCK FOR MAXIMUM SAFETY
+        /// </para>
+        /// </summary>
+        /// <param name="inst">Called from the tank you want to fetch the serial for</param>
+        /// <returns>The serial in a string of ALL saved blocks as well as the tank changes</returns>
+        public static string GetSerialization(this Tank inst)
+        {
+            return ManSafeSaves.GetSerialOfTank(inst);
+        }
+
+        /// <summary>
+        /// This is only to set the Tank and it's blocks on non-world save conditions.
+        /// <para>
+        /// MAKE SURE TO PUT THIS IN A TRY-CATCH BLOCK FOR MAXIMUM SAFETY
+        /// </para>
+        /// </summary>
+        /// <param name="inst">Called from the tank you want to fetch the serial for</param>
+        /// <param name="serialToLoad">The serial in a string of ALL saved blocks as well as the tank changes.
+        /// Set to null to purge the serialization.</param>
+        public static void SetSerialization(this Tank inst, string serialToLoad)
+        {
+            try
+            {
+                ManSafeSaves.LoadSerialToTank(inst, serialToLoad);
+            }
+            catch { }
+        }
+
+        // BLOCKS
+        /// <summary>
+        /// ONLY HANDLES INTS
         /// Save the module to the save file. 
         /// Use within Module's OnSerialize.
         /// <para>
@@ -20,12 +54,29 @@ namespace SafeSaves
         /// <param name="inst">called from the module</param>
         /// <param name="module">The module you are using</param>
         /// <returns>true if it saved correctly</returns>
-        public static bool SerializeToSafe<T>(this T inst) where T : Module
+        public static bool SerializeToSafe<T>(this T inst) where T : MonoBehaviour
         {
             return ManSafeSaves.SaveBlockToSave(inst.GetComponent<TankBlock>(), inst);
         }
+        /// <summary>
+        /// USE FOR EACH NON-INT FIELD
+        /// Save the module to the save file. 
+        /// Use within Module's OnSerialize.
+        /// <para>
+        /// MAKE SURE TO PUT THIS IN A TRY-CATCH BLOCK FOR MAXIMUM SAFETY
+        /// </para>
+        /// </summary>
+        /// <typeparam name="T">Any Valid Block Module</typeparam>
+        /// <param name="inst">called from the module</param>
+        /// <param name="module">The module you are using</param>
+        /// <returns>true if it saved correctly</returns>
+        public static bool SerializeToSafeObject<T,C>(this T inst, C Field) where T : MonoBehaviour
+        {
+            return ManSafeSaves.SaveBlockComplexFieldToSave(inst.GetComponent<TankBlock>(), inst, Field);
+        }
 
         /// <summary>
+        /// ONLY HANDLES INTS
         /// Load the module from the save file. 
         /// Use within Module's OnSerialize. 
         /// <para>
@@ -36,9 +87,26 @@ namespace SafeSaves
         /// <param name="inst">called from the module</param>
         /// <param name="module">The module you are using</param>
         /// <returns>true if it loaded correctly</returns>
-        public static bool DeserializeFromSafe<T>(this T inst) where T : Module
+        public static bool DeserializeFromSafe<T>(this T inst) where T : MonoBehaviour
         {
             return ManSafeSaves.LoadBlockFromSave(inst.GetComponent<TankBlock>(), inst);
+        }
+
+        /// <summary>
+        /// USE FOR EACH NON-INT FIELD
+        /// Load the module from the save file. 
+        /// Use within Module's OnSerialize. 
+        /// <para>
+        /// MAKE SURE TO PUT THIS IN A TRY-CATCH BLOCK FOR MAXIMUM SAFETY
+        /// </para>
+        /// </summary>
+        /// <typeparam name="T">Any Valid Block Module</typeparam>
+        /// <param name="inst">called from the module</param>
+        /// <param name="module">The module you are using</param>
+        /// <returns>true if it loaded correctly</returns>
+        public static bool DeserializeFromSafeObject<T,C>(this T inst, ref C Field) where T : MonoBehaviour
+        {
+            return ManSafeSaves.LoadBlockComplexFieldFromSave(inst.GetComponent<TankBlock>(), inst, ref Field);
         }
     }
 

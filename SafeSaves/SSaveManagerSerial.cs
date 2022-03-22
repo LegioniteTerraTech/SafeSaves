@@ -68,6 +68,8 @@ namespace SafeSaves
         {
             try
             {
+                if (!CanLoad())
+                    return false;
                 FieldInfo[] FI = type.GetFields();
                 foreach (FieldInfo item in FI)
                 {
@@ -77,10 +79,9 @@ namespace SafeSaves
 
                         foreach (FieldInfo saveable in FI)
                         {
-                            
                             if (saveable.GetCustomAttribute(typeof(SSaveFieldAttribute)) != null)
                             {
-                                LoadState(type.GetType(), saveable.Name, ref managerInst);
+                                LoadState(type, saveable.Name, managerInst, out _);
                             }
                         }
                         return true;

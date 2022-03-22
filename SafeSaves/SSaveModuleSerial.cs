@@ -42,6 +42,8 @@ namespace SafeSaves
         {
             try
             {
+                if (!CanLoad())
+                    return false;
                 Visible vis = ManSaveGame.inst.LookupSerializedVisible(visID);
                 if (vis == null)
                     return false;

@@ -99,7 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="mod.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -110,9 +110,16 @@
 set modpath="C:\Program Files (x86)\Steam\steamapps\common\TerraTech\QMods\SafeSaves"
 
 if exist !modpath! (
+if $(ConfigurationName) == Release (
 echo Copying to game
 set e=$(TargetDir)&gt;nul
 xcopy /S /Y /R "!e:~0,-1!" !modpath!
+)
+if $(ConfigurationName) == Debug (
+echo Copying to game
+set e=$(TargetDir)&gt;nul
+xcopy /S /Y /R "!e:~0,-1!" !modpath!
+)
 )
 
 

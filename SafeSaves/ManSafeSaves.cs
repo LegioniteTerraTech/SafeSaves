@@ -25,18 +25,18 @@ namespace SafeSaves
     /// </summary>
     public class ManSafeSaves : MonoBehaviour
     {
-        private static bool UseCompressor = true;
+        internal static bool UseCompressor = true;
 
-        public static string DLLDirectory;
-        public static string SavesDirectory;
-        public static string compressFileName = ".SSAV";
-        public static char up = '\\';
-        public static SafeSave currentSave = new SafeSave();
+        internal static string DLLDirectory;
+        internal static string SavesDirectory;
+        internal static string compressFileName = ".SSAV";
+        internal static char up = '\\';
+        internal static SafeSave currentSave = new SafeSave();
 
-        private static JsonSerializerSettings JSONSaver = new JsonSerializerSettings
+        internal static JsonSerializerSettings JSONSaver = new JsonSerializerSettings
         {
             DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
-            MaxDepth = 10,
+            MaxDepth = 30,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
             TypeNameHandling = TypeNameHandling.Auto,
         };
@@ -50,6 +50,7 @@ namespace SafeSaves
 
         private static ManSafeSaves inst;
         private static Harmony harmonyInst;
+        internal static bool needsToFetch = false;
         internal static bool ignoreSaving = true;
         internal static bool IgnoreSaving { get { return ignoreSaving && RegisteredSaveDLLs.Count > 0; } }
 
@@ -74,22 +75,35 @@ namespace SafeSaves
             Debug.Log("SafeSaves: ManSafeSaves - Init");
         }
         private static bool isSubscribed = false;
-        public static void Subscribe()
+        internal static void Subscribe()
         {
             if (isSubscribed)
                 return;
-            ManGameMode.inst.ModeStartEvent.Subscribe(ModeLoad);
+            ManGameMode.inst.ModeSwitchEvent.Subscribe(ModeSwitch);
+            ManGameMode.inst.ModeSetupEvent.Subscribe(ModeLoad);
             ManGameMode.inst.ModeFinishedEvent.Subscribe(ModeFinished);
+            ManTechs.inst.TankDestroyedEvent.Subscribe(TankDestroyed);
             Debug.Log("SafeSaves: Core module hooks launched");
             isSubscribed = true;
+        }
+        private static void ModeSwitch()
+        {
+            currentSave = new SafeSave();
         }
         private static void ModeLoad(Mode mode)
         {
             if (mode is ModeMain || mode is ModeMisc || mode is ModeCoOpCampaign)
             {
-                Debug.Log("SafeSaves: ManSafeSaves Loading from save!");
-                LoadDataAutomatic();
+                //Debug.Log("SafeSaves: ManSafeSaves Loading from save " + Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false) + "!");
+                //LoadDataAutomatic();
+                // Delay launch for one frame - this allows the Techs to load in properly.
+                inst.Invoke("ModeLoadDelayed", 0.01f);
             }
+        }
+        public void ModeLoadDelayed()
+        {
+            Debug.Log("SafeSaves: ManSafeSaves Loading from save " + Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false) + "!");
+            LoadDataAutomatic();
         }
         private static void ModeFinished(Mode mode)
         {
@@ -102,7 +116,11 @@ namespace SafeSaves
                     SaveDataAutomatic();
                 }
             }
-            currentSave = new SafeSave();
+        }
+        private static void TankDestroyed(Tank tech, ManDamage.DamageInfo DI)
+        {
+            if (tech)
+                LoadSerialToTank(tech, null);
         }
 
 
@@ -133,6 +151,7 @@ namespace SafeSaves
                     }
                 }
                 RegisteredSaveDLLs.Add(nameHash);
+                Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
             }
         }
         /// <summary>
@@ -166,6 +185,7 @@ namespace SafeSaves
                     }
                 }
                 RegisteredSaveDLLs.Add(nameHash);
+                Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
             }
         }
 
@@ -196,6 +216,7 @@ namespace SafeSaves
                     }
                 }
                 RegisteredSaveDLLs.Remove(nameHash);
+                Debug.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
             }
         }
         /// <summary>
@@ -229,10 +250,50 @@ namespace SafeSaves
                 onSaving.Unsubscribe(OnSave);
                 onLoading.Unsubscribe(OnLoad);
                 RegisteredSaveDLLs.Remove(nameHash);
+                Debug.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the serialization of a Tech from the current SafeSave
+        /// </summary>
+        /// <param name="inst">The non-null Tank instance</param>
+        /// <returns>the string serial</returns>
+        public static string GetSerialOfTank(Tank inst)
+        {
+            try
+            {
+                string serial = currentSave.GetSaveStateTank(inst);
+                Debug.Assert(serial == null, "SafeSaves: ManSafeSaves - GetSerialOfTank: FAILIURE IN OPERATION!  Output was null!");
+                return serial;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: ManSafeSaves - GetSerialOfTank: FAILIURE IN OPERATION! " + e);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Loads the serialization of a Tech to the Tech
+        /// </summary>
+        /// <param name="inst">The non-null Tank instance</param>
+        /// <param name="serial">The serial to load to the Tank</param>
+        public static void LoadSerialToTank(Tank inst, string serial)
+        {
+            try
+            {
+                currentSave.LoadStateTankExternal(inst, serial);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: ManSafeSaves - LoadSerialToTank: FAILIURE IN OPERATION! " + e);
             }
         }
 
         /// <summary>
+        /// ONLY SAVES INTEGERS
         /// Call this whenever you want to save a block's data - will not automatically save on it's own!
         /// </summary>
         /// <typeparam name="T">The block's Module</typeparam>
@@ -246,7 +307,7 @@ namespace SafeSaves
                 if (RegisteredModules.Contains(component.GetType()))
                     return currentSave.SaveModuleState(block.visible, component);
                 else
-                    Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in RegisterSaveSystem() first before calling this.");
+                    Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this.");
             }
             catch (Exception e)
             {
@@ -256,6 +317,31 @@ namespace SafeSaves
         }
 
         /// <summary>
+        /// USE THIS FOR EACH CASE
+        /// Call this whenever you want to save a block's data - will not automatically save on it's own!
+        /// </summary>
+        /// <typeparam name="T">The block's Module</typeparam>
+        /// <param name="block">The TankBlock that holds it</param>
+        /// <param name="component">The Module to save</param>
+        /// <returns>true if it saved</returns>
+        public static bool SaveBlockComplexFieldToSave<T, C>(TankBlock block, T component, C Field)
+        {
+            try
+            {
+                if (RegisteredModules.Contains(component.GetType()))
+                    return currentSave.SaveModuleStateField(block.visible, component, Field);
+                else
+                    Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this.");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION! " + e);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// ONLY SAVES INTEGERS
         /// Call this whenever you want to load a block's data for use in a Mod
         /// </summary>
         /// <typeparam name="T">The block's Module</typeparam>
@@ -266,8 +352,31 @@ namespace SafeSaves
         {
             try
             {
-                if (RegisteredModules.Contains(component.GetType()))
-                    return currentSave.SetModuleStateFromSave(block.visible, component);
+                if (RegisteredModules.Contains(typeof(T)))
+                    return currentSave.LoadModuleState(block.visible, component);
+                else
+                    Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in RegisterSaveSystem() first before calling this.");
+            }
+            catch
+            {
+                Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION!");
+            }
+            return false;
+        }
+        /// <summary>
+        /// USE THIS FOR EACH CASE
+        /// Call this whenever you want to load a block's data (Non-Int) for use in a Mod
+        /// </summary>
+        /// <typeparam name="T">The block's Module</typeparam>
+        /// <param name="block">The TankBlock that holds it</param>
+        /// <param name="component">The Module to save</param>
+        /// <returns>true if it loaded</returns>
+        public static bool LoadBlockComplexFieldFromSave<T,C>(TankBlock block, T component, ref C Field)
+        {
+            try
+            {
+                if (RegisteredModules.Contains(typeof(T)))
+                    return currentSave.LoadModuleStateField(block.visible, component, ref Field);
                 else
                     Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in RegisterSaveSystem() first before calling this.");
             }
@@ -281,7 +390,7 @@ namespace SafeSaves
 
         private static string SerializeFromManager(bool defaultState = false)
         {
-            return JsonConvert.SerializeObject(SaveToFileFormatting(defaultState), Formatting.None, JSONSaver);
+            return JsonConvert.SerializeObject(SaveToFileFormatting(defaultState), UseCompressor ? Formatting.None : Formatting.Indented, JSONSaver);
         }
         private static void DeserializeToManager(string SafeSaveIn)
         {
@@ -316,7 +425,7 @@ namespace SafeSaves
 
 
 
-        public static void LoadDataAutomatic()
+        internal static void LoadDataAutomatic()
         {
             try
             {
@@ -329,7 +438,7 @@ namespace SafeSaves
                 Debug.LogError("SafeSaves: ManSafeSaves - LoadDataAutomatic: FAILIURE IN MAJOR OPERATION!");
             }
         }
-        public static void SaveDataAutomatic()
+        internal static void SaveDataAutomatic()
         {
             try
             {
@@ -344,7 +453,7 @@ namespace SafeSaves
         }
 
 
-        public static void LoadData(string saveName, string altDirectory)
+        internal static void LoadData(string saveName, string altDirectory)
         {
             if (IgnoreSaving)
                 return;
@@ -430,7 +539,7 @@ namespace SafeSaves
             }
         }
 
-        public static void SaveData(string saveName, string altDirectory)
+        internal static void SaveData(string saveName, string altDirectory)
         {
             if (IgnoreSaving)
                 return;
@@ -440,6 +549,7 @@ namespace SafeSaves
             ValidateDirectory(SavesDirectory + up + altDirectory);
             try
             {
+
                 if (UseCompressor)
                 {
                     using (FileStream FS = File.Create(destination + compressFileName))
@@ -469,6 +579,7 @@ namespace SafeSaves
                 return;
             }
         }
+
 
         private static void CleanUpCache()
         {

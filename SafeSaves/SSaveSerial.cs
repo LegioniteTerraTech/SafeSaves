@@ -12,23 +12,59 @@ namespace SafeSaves
 {
     /// <summary>
     /// Is not a usable class. Only derive from this.
-    /// </summary>
+    /// </summary>    
+    [Serializable]
     public class SSaveSerial
     {
+        [JsonIgnore]
         private static JsonSerializerSettings JSONSaver = new JsonSerializerSettings
         {
             DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
             MaxDepth = 10,
             ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+            //Converters = new List<JsonConverter> { new converter }
             TypeNameHandling = TypeNameHandling.Auto,
         };
 
-        internal bool corrupted = false;
-        internal Type type;
+        public bool corrupted = false;
+        [JsonIgnore]
+        public bool typeNotLoaded = false;
+        [JsonIgnore]
+        public Type type
+        {
+            get
+            {
+                if (typeSav == null)
+                {
+                    try
+                    {
+                        if (!typeString.NullOrEmpty())
+                            typeSav = JsonConvert.DeserializeObject<Type>(typeString);
+                        else
+                            typeNotLoaded = true;
+                    }
+                    catch
+                    {
+                        // the mod is no longer installed! 
+                    }
+                }
+                return typeSav;
+            }
+            set
+            {
+                typeSav = value;
+                typeString = JsonConvert.SerializeObject(value);
+                typeNotLoaded = false;
+            }
+        }
+        [JsonIgnore]
+        public Type typeSav;
+        public string typeString;
         /// <summary>
+        /// The fields in a saveable format. 
         /// Values can overlap with hashcodes but it's extermely unlikely
         /// </summary>
-        protected Dictionary<int, string> serialized;
+        public Dictionary<int, string> serialized = new Dictionary<int, string>();
 
         protected int GetEncodedID(string saveFieldID)
         {
@@ -41,6 +77,30 @@ namespace SafeSaves
             catch { }
             Debug.LogError("SafeSaves: Could not get encoded ID?!?");
             return 0;
+        }
+        public bool CanLoad()
+        {
+            try
+            {
+                if (type == null)
+                {
+                    if (typeString != null)
+                        Debug.Log("SafeSaves: CanLoad - Could not load type of " + typeString + " because it's respective assembly is not accessable.");
+                    else
+                        Debug.Log("SafeSaves: CanLoad - Could not load because there is no saved type that this entry references.");
+                    return false;
+                }
+                if (corrupted)
+                {
+                    Debug.Log("SafeSaves: CanLoad - Could not load because the saved entry was corrupted.");
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log("SafeSaves: CanLoad - Could not load because of technical error " + e);
+            }
+            return true;
         }
 
         /// <summary>
@@ -59,7 +119,10 @@ namespace SafeSaves
                     return false;
                 return SaveStateInternal(GetEncodedID(saveFieldID), objToSave, out _);
             }
-            catch { }
+            catch (Exception e)
+            {
+                Debug.Log("SafeSaves: SaveState - error " + e);
+            }
             return false;
         }
         /// <summary>
@@ -83,38 +146,42 @@ namespace SafeSaves
             return false;
         }
 
-        /// <summary>
-        /// Loads the state of a Object from an external save.
-        /// Note: BlockSerial will return false if it cannot load the data.
-        /// </summary>
-        /// <typeparam name="T">Type of Object to load</typeparam>
-        /// <param name="saveFieldID">The name/ID to save this as</param>
-        /// <param name="objToApplyTo">The object to load from the save</param>
-        /// <returns>true if the operation completed successfully</returns>
-        protected bool LoadState<T>(string saveFieldID, ref T objToApplyTo)
+
+
+        protected bool LoadState(Type toGetType, string saveFieldID, object objCurrentInst, out object objectLoaded)
         {
+            objectLoaded = null;
             try
             {
                 if (corrupted)
+                {
+                    Debug.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
                     return false;
+                }
                 if (serialized.TryGetValue(GetEncodedID(saveFieldID), out string serial))
                 {
-                    if (objToApplyTo is MonoBehaviour)
+                    if (toGetType.IsAssignableFrom(typeof(MonoBehaviour)))
                     {   // uh-oh, we can't directly touch this
                         var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(serial);
                         if (data != null)
                         {
-                            return TryLoad<T>(ref objToApplyTo, data);
+                            return TryLoad(toGetType, ref objCurrentInst, data);
                         }
                         else
+                        {
+                            Debug.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
                             return false;
+                        }
                     }
                     else
-                        objToApplyTo = JsonConvert.DeserializeObject<T>(serial, JSONSaver);
+                        objectLoaded = JsonConvert.DeserializeObject<object>(serial, JSONSaver);
                     return true;
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                Debug.Log("SafeSaves: LoadState - Could not load item ! " + e);
+            }
             return false;
         }
 
@@ -126,32 +193,43 @@ namespace SafeSaves
         /// <param name="saveFieldID">The name/ID to save this as</param>
         /// <param name="objToApplyTo">The object to load from the save</param>
         /// <returns>true if the operation completed successfully</returns>
-        protected bool LoadState(Type type, string saveFieldID, ref object objToApplyTo)
+        protected bool LoadState<T>(string saveFieldID, object objCurrentInst, out object objectLoaded)
         {
+            objectLoaded = null;
             try
             {
                 if (corrupted)
+                {
+                    Debug.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
                     return false;
+                }
                 if (serialized.TryGetValue(GetEncodedID(saveFieldID), out string serial))
                 {
-                    if (objToApplyTo is MonoBehaviour)
+                    if (objCurrentInst is MonoBehaviour)
                     {   // uh-oh, we can't directly touch this
                         var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(serial);
                         if (data != null)
                         {
-                            return TryLoad(type, ref objToApplyTo, data);
+                            return TryLoad(objCurrentInst.GetType(), ref objCurrentInst, data);
                         }
                         else
+                        {
+                            Debug.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
                             return false;
+                        }
                     }
                     else
-                        objToApplyTo = Convert.ChangeType(JsonConvert.DeserializeObject(serial, JSONSaver), type);
+                        objectLoaded = JsonConvert.DeserializeObject<T>(serial, JSONSaver);
                     return true;
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                Debug.Log("SafeSaves: LoadState - Could not load item ! " + e);
+            }
             return false;
         }
+
 
 
         /// <summary>
@@ -163,30 +241,47 @@ namespace SafeSaves
         /// <param name="saveFieldID">The name/ID to save this as</param>
         /// <param name="objToApplyTo">The object to load from the save</param>
         /// <returns>true if the operation completed successfully</returns>
-        protected bool LoadState<T>(string saveFieldID, T objToApplyTo)
+        protected bool LoadState<T>(string saveFieldID, ref T objToApplyTo)
         {
             try
             {
                 if (corrupted)
+                {
+                    Debug.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
                     return false;
+                }
                 if (serialized.TryGetValue(GetEncodedID(saveFieldID), out string serial))
                 {
-                    if (objToApplyTo is MonoBehaviour)
-                    {   // uh-oh, we can't directly touch this
-                        var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(serial);
-                        if (data != null)
-                        {
-                            return TryLoad<T>(ref objToApplyTo, data);
+                    try
+                    {
+                        if (objToApplyTo is MonoBehaviour)
+                        {   // uh-oh, we can't directly touch this
+                            var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(serial);
+                            if (data != null)
+                            {
+                                return TryLoad<T>(ref objToApplyTo, data);
+                            }
+                            else
+                            {
+                                Debug.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
+                                return false;
+                            }
                         }
                         else
-                            return false;
+                            objToApplyTo = JsonConvert.DeserializeObject<T>(serial, JSONSaver);
                     }
-                    else
-                        objToApplyTo = JsonConvert.DeserializeObject<T>(serial, JSONSaver);
+                    catch (Exception e)
+                    {
+                        Debug.Log("SafeSaves: LoadState(FALLBACK) - Could not load item! " + e);
+                        objToApplyTo = (T)JsonConvert.DeserializeObject(serial, JSONSaver);
+                    }
                     return true;
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                Debug.Log("SafeSaves: LoadState - Could not load item ! " + e);
+            }
             return false;
         }
 
@@ -202,15 +297,28 @@ namespace SafeSaves
                 if (objToSave is MonoBehaviour)
                 {   // uh-oh, we can't directly touch this
                     serial = JsonConvert.SerializeObject(MakeCompat(objToSave), JSONSaver);
+                    Debug.Log("SafeSaves: SaveStateInternal - Saved MonoBehavior " + ID);
                 }
                 else
+                {
                     serial = JsonConvert.SerializeObject(objToSave, JSONSaver);
+                    Debug.Log("SafeSaves: SaveStateInternal - Saved Normal Field " + ID);
+                }
+                if (serialized.TryGetValue(ID, out _))
+                {
+                    serialized.Remove(ID);
+                }
                 serialized.Add(ID, serial);
                 return true;
             }
-            catch { }
+            catch (Exception e)
+            {
+                Debug.Log("SafeSaves: SaveStateInternal - error " + e);
+            }
             return false;
         }
+
+
 
         private static Dictionary<string, object> MakeCompat<T>(T convert)
         {
@@ -308,5 +416,56 @@ namespace SafeSaves
             }
             return false;
         }
+
+        internal List<string> GetSerials()
+        {
+            List<string> serials = new List<string>();
+            try
+            {
+                foreach (KeyValuePair<int, string> entry in serialized.ToList())
+                {
+                    try
+                    {
+                        serials.Add(JsonConvert.SerializeObject(entry));
+                    }
+                    catch
+                    {   // report missing component 
+                        Debug.LogError("SafeSaves: Error in save format.\n Could not load serial of ID " + entry.Key);
+                    }
+                }
+                return serials;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: Error in save format.\n GameObject case: " + e);
+            }
+            return serials;
+        }
+        internal void ApplySerials(List<string> serials)
+        {
+            try
+            {
+                serialized.Clear();
+                foreach (string serial in serials)
+                {
+                    try
+                    {
+                        KeyValuePair<int, string> IS = (KeyValuePair<int, string>)JsonConvert.DeserializeObject(serial);
+                        serialized.Add(IS.Key, IS.Value);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("SafeSaves: Error in Loading from serial." + e);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: Error in Loading from serial." + e);
+            }
+        }
+    }
+    internal class ErrorTypeUnset
+    {
     }
 }
