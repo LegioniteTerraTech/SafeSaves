@@ -274,19 +274,38 @@ namespace SafeSaves
                     {
                         try
                         {
-                            saveable.SetValue(baseInst, Convert.ChangeType(valOut, saveable.FieldType));
-                            //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
-                            return true;
+                            try
+                            {
+                                try
+                                {
+                                    saveable.SetValue(baseInst, JsonConvert.DeserializeObject(valOut.ToString(), saveable.FieldType));
+                                    //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
+                                    return true;
+                                }
+                                catch
+                                {
+                                    saveable.SetValue(baseInst, Convert.ChangeType(valOut, saveable.FieldType));
+                                    //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
+                                    return true;
+                                }
+                            }
+                            catch
+                            {
+                                saveable.SetValue(baseInst, Convert.ChangeType(Convert.ToInt64(valOut), saveable.FieldType));
+                                //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
+                                return true;
+                            }
                         }
                         catch
                         {
-                            saveable.SetValue(baseInst, (object)(Convert.ToInt32(valOut)));
+                            saveable.SetValue(baseInst, Enum.Parse(saveable.FieldType, Convert.ToInt64(valOut).ToString()));
                             //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
                             return true;
                         }
                     }
                     catch (Exception e)
                     {
+                        Debug.Log("SafeSaves: Autocast - Failed trying to deal with item " + saveable.Name + " of " + type.ToString() + " which is " + saveable.FieldType.ToString() + ", valOut: " + (T)valOut);
                         Debug.LogError("SafeSaves: Autocast - Error on operation in " + saveable.Name + " of " + type.ToString() + " | " + e);
                     }
                 }
