@@ -40,6 +40,10 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'SteamLone|AnyCPU'">
+    <OutputPath>bin\SteamLone\</OutputPath>
+    <DefineConstants>STEAM, LONE</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\TerraTech\TerraTechWin64_Data\Managed\0Harmony.dll</HintPath>
@@ -87,6 +91,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Debug.cs" />
     <Compile Include="ManSafeSaves.cs" />
     <Compile Include="Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -128,12 +133,13 @@ set modpath2="C:\Users\Legionite\Desktop\Advanced AI\Assets\Mods\Mod Saves"
 
 
 if exist !modpath2! (
-if $(ConfigurationName) == Steam (
+if $(ConfigurationName) == SteamLone (
 echo Copying to SteamMod
 set e=$(TargetDir)&gt;nul
 xcopy /S /Y /R "!e:~0,-1!" !modpath2!
 )
 )
+
 
 set modpath3="C:\Program Files (x86)\Steam\steamapps\common\TerraTech\LocalMods\Mod Saves"
 
@@ -142,6 +148,38 @@ if $(ConfigurationName) == Steam (
 echo Copying to SteamModLocalDirect
 set e=$(TargetDir)&gt;nul
 xcopy /S /Y /R "!e:~0,-1!" !modpath3!
+)
+)
+
+set modpath4="C:\Program Files (x86)\Steam\steamapps\workshop\content\285920\2765342436"
+
+if exist !modpath4! (
+if $(ConfigurationName) == Steam (
+echo Copying to SteamWorkshopLocalDirect
+set e=$(TargetDir)&gt;nul
+xcopy /S /Y /R "!e:~0,-1!" !modpath4!
+)
+)
+
+
+set modpath5="C:\Users\Legionite\Documents\GitHub\TACtical_AI\TAC_AI\bin\Steam"
+
+if exist !modpath5! (
+if $(ConfigurationName) == Steam (
+echo Copying to SteamComplier
+set e=$(TargetDir)&gt;nul
+xcopy /S /Y /R "!e:~0,-1!" !modpath5!
+)
+)
+
+
+set modpath6="C:\Users\Legionite\Documents\GitHub\RandomAdditions\RandomAdditions\bin\Steam"
+
+if exist !modpath6! (
+if $(ConfigurationName) == Steam (
+echo Copying to SteamMod
+set e=$(TargetDir)&gt;nul
+xcopy /S /Y /R "!e:~0,-1!" !modpath6!
 )
 )</PostBuildEvent>
   </PropertyGroup>

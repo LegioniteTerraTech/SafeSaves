@@ -130,28 +130,35 @@ namespace SafeSaves
         /// MAKE SURE TO PUT THIS IN A TRY-CATCH BLOCK FOR MAXIMUM SAFETY
         /// </para>
         /// </summary>
-        public static void RegisterSaveSystem()
+        public static void RegisterSaveSystem(Assembly AEM)
         {
-            Assembly AEM = Assembly.GetCallingAssembly();
-            int nameHash = AEM.GetName().Name.GetHashCode();
-            if (!RegisteredSaveDLLs.Contains(nameHash))
+            try
             {
-                foreach (var typeCase in AEM.GetTypes())
+                int nameHash = AEM.GetName().Name.GetHashCode();
+                if (!RegisteredSaveDLLs.Contains(nameHash))
                 {
-                    foreach (var item in typeCase.GetCustomAttributes())
+                    foreach (var typeCase in AEM.GetTypes())
                     {
-                        if (item is AutoSaveManagerAttribute)
+                        foreach (var item in typeCase.GetCustomAttributes())
                         {
-                            RegisteredManagers.Add(typeCase);
-                        }
-                        else if (item is AutoSaveComponentAttribute)
-                        {
-                            RegisteredModules.Add(typeCase);
+                            if (item is AutoSaveManagerAttribute)
+                            {
+                                RegisteredManagers.Add(typeCase);
+                            }
+                            else if (item is AutoSaveComponentAttribute)
+                            {
+                                RegisteredModules.Add(typeCase);
+                            }
                         }
                     }
+                    RegisteredSaveDLLs.Add(nameHash);
+                    Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
                 }
-                RegisteredSaveDLLs.Add(nameHash);
-                Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
+            }
+            catch
+            {
+                Debug.Log("SafeSaves: Could not register " + AEM.FullName + ", will try again.");
+                inst.queued.Add(new AssemblyQueue(AEM, null, null));
             }
         }
         /// <summary>
@@ -162,30 +169,37 @@ namespace SafeSaves
         /// </summary>
         /// <param name="OnSave">The method to invoke before this acts. true when starting and false when done.</param>
         /// <param name="OnLoad">The method to invoke after this acts. true when starting and false when done.</param>
-        public static void RegisterSaveSystem(Action<bool> OnSave, Action<bool> OnLoad)
+        public static void RegisterSaveSystem(Assembly AEM, Action<bool> OnSave, Action<bool> OnLoad)
         {
-            Assembly AEM = Assembly.GetCallingAssembly();
-            int nameHash = AEM.GetName().Name.GetHashCode();
-            if (!RegisteredSaveDLLs.Contains(nameHash))
+            try
             {
-                onSaving.Subscribe(OnSave);
-                onLoading.Subscribe(OnLoad);
-                foreach (var typeCase in AEM.GetTypes())
+                int nameHash = AEM.GetName().Name.GetHashCode();
+                if (!RegisteredSaveDLLs.Contains(nameHash))
                 {
-                    foreach (var item in typeCase.GetCustomAttributes())
+                    onSaving.Subscribe(OnSave);
+                    onLoading.Subscribe(OnLoad);
+                    foreach (var typeCase in AEM.GetTypes())
                     {
-                        if (item is AutoSaveManagerAttribute)
+                        foreach (var item in typeCase.GetCustomAttributes())
                         {
-                            RegisteredManagers.Add(typeCase);
-                        }
-                        else if (item is AutoSaveComponentAttribute)
-                        {
-                            RegisteredModules.Add(typeCase);
+                            if (item is AutoSaveManagerAttribute)
+                            {
+                                RegisteredManagers.Add(typeCase);
+                            }
+                            else if (item is AutoSaveComponentAttribute)
+                            {
+                                RegisteredModules.Add(typeCase);
+                            }
                         }
                     }
+                    RegisteredSaveDLLs.Add(nameHash);
+                    Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
                 }
-                RegisteredSaveDLLs.Add(nameHash);
-                Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
+            }
+            catch
+            {
+                Debug.Log("SafeSaves: Could not register " + AEM.FullName + ", will try again.");
+                inst.queued.Add(new AssemblyQueue(AEM, OnSave, OnLoad));
             }
         }
 
@@ -195,9 +209,8 @@ namespace SafeSaves
         /// MAKE SURE TO PUT THIS IN A TRY-CATCH BLOCK FOR MAXIMUM SAFETY
         /// </para>
         /// </summary>
-        public static void UnregisterSaveSystem()
+        public static void UnregisterSaveSystem(Assembly AEM)
         {
-            Assembly AEM = Assembly.GetCallingAssembly();
             int nameHash = AEM.GetName().Name.GetHashCode();
             if (RegisteredSaveDLLs.Contains(nameHash))
             {
@@ -227,9 +240,8 @@ namespace SafeSaves
         /// </summary>
         /// <param name="OnSave">The method to invoke before this acts. true when starting and false when done.</param>
         /// <param name="OnLoad">The method to invoke after this acts. true when starting and false when done.</param>
-        public static void UnregisterSaveSystem(Action<bool> OnSave, Action<bool> OnLoad)
+        public static void UnregisterSaveSystem(Assembly AEM, Action<bool> OnSave, Action<bool> OnLoad)
         {
-            Assembly AEM = Assembly.GetCallingAssembly();
             int nameHash = AEM.GetName().Name.GetHashCode();
             if (RegisteredSaveDLLs.Contains(nameHash))
             {
@@ -253,6 +265,23 @@ namespace SafeSaves
                 Debug.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
             }
         }
+
+        private List<AssemblyQueue> queued = new List<AssemblyQueue>();
+        private void Update()
+        {
+            if (queued.Count == 0)
+                return;
+            try
+            {
+                foreach (var item in queued)
+                {
+                    item.TryAdd();
+                }
+                queued.Clear();
+            }
+            catch { }
+        }
+
 
 
         /// <summary>
@@ -300,14 +329,11 @@ namespace SafeSaves
         /// <param name="block">The TankBlock that holds it</param>
         /// <param name="component">The Module to save</param>
         /// <returns>true if it saved</returns>
-        public static bool SaveBlockToSave<T>(TankBlock block, T component)
+        internal static bool SaveBlockToSave<T>(TankBlock block, T component)
         {
             try
             {
-                if (RegisteredModules.Contains(component.GetType()))
-                    return currentSave.SaveModuleState(block.visible, component);
-                else
-                    Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this.");
+                return currentSave.SaveModuleState(block.visible, component);
             }
             catch (Exception e)
             {
@@ -324,14 +350,11 @@ namespace SafeSaves
         /// <param name="block">The TankBlock that holds it</param>
         /// <param name="component">The Module to save</param>
         /// <returns>true if it saved</returns>
-        public static bool SaveBlockComplexFieldToSave<T, C>(TankBlock block, T component, C Field)
+        internal static bool SaveBlockComplexFieldToSave<T, C>(TankBlock block, T component, C Field)
         {
             try
             {
-                if (RegisteredModules.Contains(component.GetType()))
-                    return currentSave.SaveModuleStateField(block.visible, component, Field);
-                else
-                    Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this.");
+                return currentSave.SaveModuleStateField(block.visible, component, Field);
             }
             catch (Exception e)
             {
@@ -348,14 +371,11 @@ namespace SafeSaves
         /// <param name="block">The TankBlock that holds it</param>
         /// <param name="component">The Module to save</param>
         /// <returns>true if it loaded</returns>
-        public static bool LoadBlockFromSave<T>(TankBlock block, T component)
+        internal static bool LoadBlockFromSave<T>(TankBlock block, T component)
         {
             try
             {
-                if (RegisteredModules.Contains(typeof(T)))
-                    return currentSave.LoadModuleState(block.visible, component);
-                else
-                    Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in RegisterSaveSystem() first before calling this.");
+                return currentSave.LoadModuleState(block.visible, component);
             }
             catch
             {
@@ -371,14 +391,11 @@ namespace SafeSaves
         /// <param name="block">The TankBlock that holds it</param>
         /// <param name="component">The Module to save</param>
         /// <returns>true if it loaded</returns>
-        public static bool LoadBlockComplexFieldFromSave<T,C>(TankBlock block, T component, ref C Field)
+        internal static bool LoadBlockComplexFieldFromSave<T, C>(TankBlock block, T component, ref C Field)
         {
             try
             {
-                if (RegisteredModules.Contains(typeof(T)))
-                    return currentSave.LoadModuleStateField(block.visible, component, ref Field);
-                else
-                    Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: Please register your Assembly(.dll) with class " + component.GetType() + " in RegisterSaveSystem() first before calling this.");
+                return currentSave.LoadModuleStateField(block.visible, component, ref Field);
             }
             catch
             {
@@ -632,5 +649,26 @@ namespace SafeSaves
             }
         }
 
+
+        internal class AssemblyQueue
+        {
+            public Assembly toDo;
+            public Action<bool> OnSave;
+            public Action<bool> OnLoad;
+
+            public AssemblyQueue(Assembly AEY, Action<bool> save, Action<bool> load)
+            {
+                toDo = AEY;
+                OnSave = save;
+                OnLoad = load;
+            }
+            public void TryAdd()
+            {
+                if (OnSave != null && OnLoad != null)
+                    RegisterSaveSystem(toDo, OnSave, OnLoad);
+                else
+                    RegisterSaveSystem(toDo);
+            }
+        }
     }
 }

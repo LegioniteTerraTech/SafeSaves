@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using UnityEngine;
 using HarmonyLib;
 
@@ -56,7 +57,26 @@ namespace SafeSaves
         /// <returns>true if it saved correctly</returns>
         public static bool SerializeToSafe<T>(this T inst) where T : MonoBehaviour
         {
-            return ManSafeSaves.SaveBlockToSave(inst.GetComponent<TankBlock>(), inst);
+            try
+            {
+                if (ManSafeSaves.RegisteredModules.Contains(typeof(T)))
+                    return ManSafeSaves.SaveBlockToSave(inst.GetComponent<TankBlock>(), inst);
+                else
+                {
+                    Debug.Log("SafeSaves: ManSafeSaves - SerializeToSafe: Please register your Assembly(.dll) with class "
+                        + typeof(T) + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this. "
+                        + StackTraceUtility.ExtractStackTrace().ToString());
+
+                    Debug.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
+                    ManSafeSaves.RegisterSaveSystem(Assembly.GetCallingAssembly());
+                    Debug.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: ManSafeSaves - SerializeToSafe: FAILIURE IN OPERATION! " + e);
+            }
+            return false;
         }
         /// <summary>
         /// USE FOR EACH NON-INT FIELD
@@ -72,7 +92,26 @@ namespace SafeSaves
         /// <returns>true if it saved correctly</returns>
         public static bool SerializeToSafeObject<T,C>(this T inst, C Field) where T : MonoBehaviour
         {
-            return ManSafeSaves.SaveBlockComplexFieldToSave(inst.GetComponent<TankBlock>(), inst, Field);
+            try
+            {
+                if (ManSafeSaves.RegisteredModules.Contains(typeof(T)))
+                    return ManSafeSaves.SaveBlockComplexFieldToSave(inst.GetComponent<TankBlock>(), inst, Field);
+                else
+                {
+                    Debug.Log("SafeSaves: ManSafeSaves - SerializeToSafeObject: Please register your Assembly(.dll) with class "
+                        + typeof(T) + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this. "
+                        + StackTraceUtility.ExtractStackTrace().ToString());
+
+                    Debug.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
+                    ManSafeSaves.RegisterSaveSystem(Assembly.GetCallingAssembly());
+                    Debug.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: ManSafeSaves - SerializeToSafeObject: FAILIURE IN OPERATION! " + e);
+            }
+            return false;
         }
 
         /// <summary>
@@ -89,7 +128,26 @@ namespace SafeSaves
         /// <returns>true if it loaded correctly</returns>
         public static bool DeserializeFromSafe<T>(this T inst) where T : MonoBehaviour
         {
-            return ManSafeSaves.LoadBlockFromSave(inst.GetComponent<TankBlock>(), inst);
+            try
+            {
+                if (ManSafeSaves.RegisteredModules.Contains(typeof(T)))
+                    return ManSafeSaves.LoadBlockFromSave(inst.GetComponent<TankBlock>(), inst);
+                else
+                {
+                    Debug.Log("SafeSaves: ManSafeSaves - DeserializeFromSafe: Please register your Assembly(.dll) with class "
+                        + typeof(T) + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this. "
+                        + StackTraceUtility.ExtractStackTrace().ToString());
+
+                    Debug.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
+                    ManSafeSaves.RegisterSaveSystem(Assembly.GetCallingAssembly());
+                    Debug.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: ManSafeSaves - DeserializeFromSafe: FAILIURE IN OPERATION! " + e);
+            }
+            return false;
         }
 
         /// <summary>
@@ -106,11 +164,30 @@ namespace SafeSaves
         /// <returns>true if it loaded correctly</returns>
         public static bool DeserializeFromSafeObject<T,C>(this T inst, ref C Field) where T : MonoBehaviour
         {
-            return ManSafeSaves.LoadBlockComplexFieldFromSave(inst.GetComponent<TankBlock>(), inst, ref Field);
+            try
+            {
+                if (ManSafeSaves.RegisteredModules.Contains(typeof(T)))
+                    return ManSafeSaves.LoadBlockComplexFieldFromSave(inst.GetComponent<TankBlock>(), inst, ref Field);
+                else
+                {
+                    Debug.Log("SafeSaves: ManSafeSaves - DeserializeFromSafeObject: Please register your Assembly(.dll) with class "
+                        + typeof(T) + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this. "
+                        + StackTraceUtility.ExtractStackTrace().ToString());
+
+                    Debug.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
+                    ManSafeSaves.RegisterSaveSystem(Assembly.GetCallingAssembly());
+                    Debug.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("SafeSaves: ManSafeSaves - DeserializeFromSafeObject: FAILIURE IN OPERATION! " + e);
+            }
+            return false;
         }
     }
 
-#if STEAM
+#if LONE
     public class KickStartSafeSaves : ModBase
     {
 

@@ -12,6 +12,7 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 		Steam|Any CPU = Steam|Any CPU
+		SteamLone|Any CPU = SteamLone|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{AA51DF77-2E8F-4484-A003-DBDF490167E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -20,6 +21,8 @@ Global
 		{AA51DF77-2E8F-4484-A003-DBDF490167E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AA51DF77-2E8F-4484-A003-DBDF490167E1}.Steam|Any CPU.ActiveCfg = Steam|Any CPU
 		{AA51DF77-2E8F-4484-A003-DBDF490167E1}.Steam|Any CPU.Build.0 = Steam|Any CPU
+		{AA51DF77-2E8F-4484-A003-DBDF490167E1}.SteamLone|Any CPU.ActiveCfg = SteamLone|Any CPU
+		{AA51DF77-2E8F-4484-A003-DBDF490167E1}.SteamLone|Any CPU.Build.0 = SteamLone|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
