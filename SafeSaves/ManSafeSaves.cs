@@ -123,13 +123,24 @@ namespace SafeSaves
                 LoadSerialToTank(tech, null);
         }
 
+        public static Type[] FORCE_GET_TYPES(Assembly AEM)
+        {
+            try
+            {
+                return AEM.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                return e.Types;
+            }
+        }
 
         /// <summary>
-        /// Invoke this once to register it to the saving system.
-        /// <para>
-        /// MAKE SURE TO PUT THIS IN A TRY-CATCH BLOCK FOR MAXIMUM SAFETY
-        /// </para>
-        /// </summary>
+            /// Invoke this once to register it to the saving system.
+            /// <para>
+            /// MAKE SURE TO PUT THIS IN A TRY-CATCH BLOCK FOR MAXIMUM SAFETY
+            /// </para>
+            /// </summary>
         public static void RegisterSaveSystem(Assembly AEM)
         {
             try
@@ -137,8 +148,12 @@ namespace SafeSaves
                 int nameHash = AEM.GetName().Name.GetHashCode();
                 if (!RegisteredSaveDLLs.Contains(nameHash))
                 {
-                    foreach (var typeCase in AEM.GetTypes())
+                    Type[] types = FORCE_GET_TYPES(AEM);
+                    for (int step = 0; step < types.Length; step++)
                     {
+                        Type typeCase = types[step];
+                        if (typeCase == null)
+                            continue;
                         foreach (var item in typeCase.GetCustomAttributes())
                         {
                             if (item is AutoSaveManagerAttribute)
@@ -155,9 +170,9 @@ namespace SafeSaves
                     Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
                 }
             }
-            catch
+            catch (Exception e)
             {
-                Debug.Log("SafeSaves: Could not register " + AEM.FullName + ", will try again.");
+                Debug.Log("SafeSaves: Could not register " + AEM.FullName + ", will try again." + e);
                 inst.queued.Add(new AssemblyQueue(AEM, null, null));
             }
         }
@@ -178,8 +193,12 @@ namespace SafeSaves
                 {
                     onSaving.Subscribe(OnSave);
                     onLoading.Subscribe(OnLoad);
-                    foreach (var typeCase in AEM.GetTypes())
+                    Type[] types = FORCE_GET_TYPES(AEM);
+                    for (int step = 0; step < types.Length; step++)
                     {
+                        Type typeCase = types[step];
+                        if (typeCase == null)
+                            continue;
                         foreach (var item in typeCase.GetCustomAttributes())
                         {
                             if (item is AutoSaveManagerAttribute)
@@ -214,8 +233,12 @@ namespace SafeSaves
             int nameHash = AEM.GetName().Name.GetHashCode();
             if (RegisteredSaveDLLs.Contains(nameHash))
             {
-                foreach (var typeCase in AEM.GetTypes())
+                Type[] types = FORCE_GET_TYPES(AEM);
+                for (int step = 0; step < types.Length; step++)
                 {
+                    Type typeCase = types[step];
+                    if (typeCase == null)
+                        continue;
                     foreach (var item in typeCase.GetCustomAttributes())
                     {
                         if (item is AutoSaveManagerAttribute)
@@ -245,8 +268,12 @@ namespace SafeSaves
             int nameHash = AEM.GetName().Name.GetHashCode();
             if (RegisteredSaveDLLs.Contains(nameHash))
             {
-                foreach (var typeCase in AEM.GetTypes())
+                Type[] types = FORCE_GET_TYPES(AEM);
+                for (int step = 0; step < types.Length; step++)
                 {
+                    Type typeCase = types[step];
+                    if (typeCase == null)
+                        continue;
                     foreach (var item in typeCase.GetCustomAttributes())
                     {
                         if (item is AutoSaveManagerAttribute)
