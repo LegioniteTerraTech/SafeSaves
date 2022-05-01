@@ -146,7 +146,7 @@ namespace SafeSaves
                         Debug.LogError("SafeSaves: SafeSave - SaveModuleState: Could NOT save to present in " + searchID);
                         return false;
                     }
-                    Debug.Log("SafeSaves: SafeSave - SaveModuleState: Saved to present in " + searchID);
+                    Debug.Info("SafeSaves: SafeSave - SaveModuleState: Saved to present in " + searchID);
                 }
                 else
                 {
@@ -154,7 +154,7 @@ namespace SafeSaves
                     if (SSVS != null)
                     {
                         list.Add(SSVS);
-                        Debug.Log("SafeSaves: SafeSave - SaveModuleState: Saved " + list.Count + " in " + searchID);
+                        Debug.Info("SafeSaves: SafeSave - SaveModuleState: Saved " + list.Count + " in " + searchID);
                     }
                     else
                         Debug.LogError("SafeSaves: SafeSave - SaveModuleState: Tried to save " + list.Count + " in " + searchID + " but the GC GOT IT FIRST");
@@ -166,7 +166,7 @@ namespace SafeSaves
                 if (SSVS != null)
                 {
                     AllVisibleEntries.Add(searchID, new List<SSaveVisibleSerial> { SSVS });
-                    Debug.Log("SafeSaves: SafeSave - SaveModuleState: Saved in " + searchID);
+                    Debug.Info("SafeSaves: SafeSave - SaveModuleState: Saved in " + searchID);
                 }
                 else
                     Debug.LogError("SafeSaves: SafeSave - SaveModuleState(NewList): Tried to save " + list.Count + " in " + searchID + " but the GC GOT IT FIRST");
@@ -234,7 +234,7 @@ namespace SafeSaves
                         Debug.LogError("SafeSaves: SafeSave - SaveModuleState: Could NOT save to present in " + searchID);
                         return false;
                     }
-                    Debug.Log("SafeSaves: SafeSave - SaveModuleState: Saved to present in " + searchID);
+                    Debug.Info("SafeSaves: SafeSave - SaveModuleState: Saved to present in " + searchID);
                 }
                 else
                 {
@@ -242,7 +242,7 @@ namespace SafeSaves
                     if (SSVS != null)
                     {
                         list.Add(SSVS);
-                        Debug.Log("SafeSaves: SafeSave - SaveModuleState: Saved " + list.Count + " in " + searchID);
+                        Debug.Info("SafeSaves: SafeSave - SaveModuleState: Saved " + list.Count + " in " + searchID);
                     }
                     else
                         Debug.LogError("SafeSaves: SafeSave - SaveModuleState: Tried to save " + list.Count + " in " + searchID + " but the GC GOT IT FIRST");
@@ -254,7 +254,7 @@ namespace SafeSaves
                 if (SSVS != null)
                 {
                     AllVisibleEntries.Add(searchID, new List<SSaveVisibleSerial> { SSVS });
-                    Debug.Log("SafeSaves: SafeSave - SaveModuleState: Saved in " + searchID);
+                    Debug.Info("SafeSaves: SafeSave - SaveModuleState: Saved in " + searchID);
                 }
                 else
                     Debug.LogError("SafeSaves: SafeSave - SaveModuleState(NewList): Tried to save " + list.Count + " in " + searchID + " but the GC GOT IT FIRST");
@@ -313,12 +313,12 @@ namespace SafeSaves
                         Debug.LogError("SafeSaves: SafeSave - LoadModuleState: Could NOT load to present in " + searchID);
                         return false;
                     }
-                    Debug.Log("SafeSaves: SafeSave - LoadModuleState: Loaded to present in " + searchID);
+                    Debug.Info("SafeSaves: SafeSave - LoadModuleState: Loaded to present in " + searchID);
                     return true;
                 }
                 else
                 {
-                    Debug.Log("SafeSaves: SafeSave - LoadModuleState: There's no saved entry for " + searchID + " of component " + typeof(T).ToString() + ".");
+                    Debug.Info("SafeSaves: SafeSave - LoadModuleState: There's no saved entry for " + searchID + " of component " + typeof(T).ToString() + ".");
                     //SSVS = new SSaveVisibleSerial(vis, typeof(T));
                     //if (SSVS != null)
                     //    list.Add(SSVS);
@@ -326,7 +326,7 @@ namespace SafeSaves
             }
             else
             {
-                Debug.Log("SafeSaves: SafeSave - LoadModuleState: There's no saved entry for " + searchID + ".");
+                Debug.Info("SafeSaves: SafeSave - LoadModuleState: There's no saved entry for " + searchID + ".");
                 //SSVS = new SSaveVisibleSerial(vis, typeof(T));
                 //if (SSVS != null)
                 //    AllVisibleEntries.Add(searchID, new List<SSaveVisibleSerial> { SSVS });
@@ -380,12 +380,12 @@ namespace SafeSaves
                         Debug.LogError("SafeSaves: SafeSave - LoadModuleState: Could NOT load to present in " + searchID);
                         return false;
                     }
-                    Debug.Log("SafeSaves: SafeSave - LoadModuleState: Loaded to present in " + searchID);
+                    Debug.Info("SafeSaves: SafeSave - LoadModuleState: Loaded to present in " + searchID);
                     return true;
                 }
                 else
                 {
-                    Debug.Log("SafeSaves: SafeSave - LoadModuleState: There's no saved entry for " + searchID + " of component " + typeof(T).ToString() + ".");
+                    Debug.Info("SafeSaves: SafeSave - LoadModuleState: There's no saved entry for " + searchID + " of component " + typeof(T).ToString() + ".");
                     //SSVS = new SSaveVisibleSerial(vis, typeof(T));
                     //if (SSVS != null)
                     //    list.Add(SSVS);
@@ -393,7 +393,7 @@ namespace SafeSaves
             }
             else
             {
-                Debug.Log("SafeSaves: SafeSave - LoadModuleState: There's no saved entry for " + searchID + ".");
+                Debug.Info("SafeSaves: SafeSave - LoadModuleState: There's no saved entry for " + searchID + ".");
                 //SSVS = new SSaveVisibleSerial(vis, typeof(T));
                 //if (SSVS != null)
                 //    AllVisibleEntries.Add(searchID, new List<SSaveVisibleSerial> { SSVS });

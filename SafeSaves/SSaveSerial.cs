@@ -297,12 +297,12 @@ namespace SafeSaves
                 if (objToSave is MonoBehaviour)
                 {   // uh-oh, we can't directly touch this
                     serial = JsonConvert.SerializeObject(MakeCompat(objToSave), JSONSaver);
-                    Debug.Log("SafeSaves: SaveStateInternal - Saved MonoBehavior " + ID);
+                    Debug.Info("SafeSaves: SaveStateInternal - Saved MonoBehavior " + ID);
                 }
                 else
                 {
                     serial = JsonConvert.SerializeObject(objToSave, JSONSaver);
-                    Debug.Log("SafeSaves: SaveStateInternal - Saved Normal Field " + ID);
+                    Debug.Info("SafeSaves: SaveStateInternal - Saved Normal Field " + ID);
                 }
                 if (serialized.TryGetValue(ID, out _))
                 {
