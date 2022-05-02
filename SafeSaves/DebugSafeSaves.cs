@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace SafeSaves
 {
-    internal static class Debug
+    internal static class DebugSafeSaves
     {
         internal static bool LogAll = false;
         internal static bool ShouldLog = true;

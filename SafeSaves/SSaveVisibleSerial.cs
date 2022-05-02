@@ -34,7 +34,7 @@ namespace SafeSaves
             if (!toSave)
             {
                 corrupted = true;
-                Debug.LogError("SafeSaves: Was given a null Visible to save! " + StackTraceUtility.ExtractStackTrace());
+                DebugSafeSaves.LogError("SafeSaves: Was given a null Visible to save! " + StackTraceUtility.ExtractStackTrace());
                 return;
             }
             switch (toSave.type)
@@ -43,13 +43,13 @@ namespace SafeSaves
                     if (!toSave.block)
                     {
                         corrupted = true;
-                        Debug.LogError("SafeSaves: Was given a null Block to save! " + StackTraceUtility.ExtractStackTrace());
+                        DebugSafeSaves.LogError("SafeSaves: Was given a null Block to save! " + StackTraceUtility.ExtractStackTrace());
                         return;
                     }
                     if (!toSave.trans.root.GetComponent<Tank>())
                     {
                         corrupted = true;
-                        Debug.LogError("SafeSaves: Was given a Block not attached to any Tech on save! \n This DOES NOT WORK because unattached block IDs do not save or load with the save!!! \n" + StackTraceUtility.ExtractStackTrace());
+                        DebugSafeSaves.LogError("SafeSaves: Was given a Block not attached to any Tech on save! \n This DOES NOT WORK because unattached block IDs do not save or load with the save!!! \n" + StackTraceUtility.ExtractStackTrace());
                         return;
                     }
                     visID = toSave.transform.root.GetComponent<Visible>().ID;
@@ -67,25 +67,25 @@ namespace SafeSaves
                     if (!found)
                     {
                         corrupted = true;
-                        Debug.LogError("SafeSaves: Tried to save a block not linked properly to the Tech \n" + StackTraceUtility.ExtractStackTrace());
+                        DebugSafeSaves.LogError("SafeSaves: Tried to save a block not linked properly to the Tech \n" + StackTraceUtility.ExtractStackTrace());
                         return;
                     }
                     objType = toSave.type;
                     type = Module;
-                    Debug.Log("SafeSaves: Saved a Block with Tank ID " + visID + ", index " + blockOrder);
+                    DebugSafeSaves.Log("SafeSaves: Saved a Block with Tank ID " + visID + ", index " + blockOrder);
                     break;
                 case ObjectTypes.Vehicle:
                     if (!toSave.trans.root.GetComponent<Tank>())
                     {
                         corrupted = true;
-                        Debug.LogError("SafeSaves: Was given a null Vehicle to save! " + StackTraceUtility.ExtractStackTrace());
+                        DebugSafeSaves.LogError("SafeSaves: Was given a null Vehicle to save! " + StackTraceUtility.ExtractStackTrace());
                         return;
                     }
                     visID = toSave.ID;
                     blockOrder = -1;
                     objType = toSave.type;
                     type = Module;
-                    Debug.Log("SafeSaves: Saved a Vehicle with ID " + visID);
+                    DebugSafeSaves.Log("SafeSaves: Saved a Vehicle with ID " + visID);
                     break;
                 default:
                     throw new ArgumentException("SafeSaves.SSaveVisibleSerial - Was given an illegal Visible type of " + toSave.type + " which is not supported. ");
@@ -100,7 +100,7 @@ namespace SafeSaves
             {
                 if (currentInst == null)
                 {
-                    Debug.Log("SafeSaves: Could not find the SerializedVisible " + visID + " for the component " + type.ToString() + "!");
+                    DebugSafeSaves.Log("SafeSaves: Could not find the SerializedVisible " + visID + " for the component " + type.ToString() + "!");
                     //return false;
                 }
                 foreach (var item in currentInst.gameObject.GetComponents(type))
@@ -115,23 +115,23 @@ namespace SafeSaves
                                 if (!SaveState(saveable.Name, saveable.GetValue(item)))
                                 {
                                     worked = false;
-                                    Debug.Log("SafeSaves: Could not save item " + saveable.Name + " of " + type.ToString());
+                                    DebugSafeSaves.Log("SafeSaves: Could not save item " + saveable.Name + " of " + type.ToString());
                                 }
                                 //else
                                 //    Debug.Log("SafeSaves: Saved item " + saveable.Name + " of " + type.ToString() + " in state " + saveable.GetValue(item));
                             }
                         }
                         if (!worked)
-                            Debug.Log("SafeSaves: Could not save items in " + type.ToString() + "!");
+                            DebugSafeSaves.Log("SafeSaves: Could not save items in " + type.ToString() + "!");
                         return worked;
                     }
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Crash on operation " + e);
+                DebugSafeSaves.LogError("SafeSaves: Crash on operation " + e);
             }
-            Debug.LogError("SafeSaves: Could not get encoded ID?!?");
+            DebugSafeSaves.LogError("SafeSaves: Could not get encoded ID?!?");
             return false;
         }
         internal bool SaveModuleFieldOnVisible<T>(Visible currentInst, T field)
@@ -140,7 +140,7 @@ namespace SafeSaves
             {
                 if (currentInst == null)
                 {
-                    Debug.Log("SafeSaves: Could not find the SerializedVisible " + visID + " for the component " + type.ToString() + "!");
+                    DebugSafeSaves.Log("SafeSaves: Could not find the SerializedVisible " + visID + " for the component " + type.ToString() + "!");
                     //return false;
                 }
                 foreach (var item in currentInst.gameObject.GetComponents(type))
@@ -155,22 +155,22 @@ namespace SafeSaves
                                 if (!SaveState(saveable.Name, field))
                                 {
                                     worked = false;
-                                    Debug.Log("SafeSaves: Could not save item " + saveable.Name + " of " + type.ToString());
+                                    DebugSafeSaves.Log("SafeSaves: Could not save item " + saveable.Name + " of " + type.ToString());
                                 }
                                 //else
                                 //    Debug.Log("SafeSaves: Saved item " + saveable.Name + " of " + type.ToString() + " in state " + saveable.GetValue(item));
                                 return true;
                             }
                         }
-                        Debug.Log("SafeSaves: Could not save " + typeof(T).ToString() + " in " + type.ToString() + "!");
+                        DebugSafeSaves.Log("SafeSaves: Could not save " + typeof(T).ToString() + " in " + type.ToString() + "!");
                     }
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Crash on operation " + e);
+                DebugSafeSaves.LogError("SafeSaves: Crash on operation " + e);
             }
-            Debug.LogError("SafeSaves: Could not get encoded ID?!?");
+            DebugSafeSaves.LogError("SafeSaves: Could not get encoded ID?!?");
             return false;
         }
         internal bool LoadModuleOnVisible(Visible currentInst)
@@ -179,7 +179,7 @@ namespace SafeSaves
             {
                 if (currentInst == null)
                 {
-                    Debug.Log("SafeSaves: Could not find the SerializedVisible " + visID + " for the component " + type.ToString() + "!");
+                    DebugSafeSaves.Log("SafeSaves: Could not find the SerializedVisible " + visID + " for the component " + type.ToString() + "!");
                     //return false;
                 }
                 if (!CanLoad())
@@ -200,7 +200,7 @@ namespace SafeSaves
                             }
                         }
                         if (!worked)
-                            Debug.Log("SafeSaves: Could not load items in " + type.ToString() + "!");
+                            DebugSafeSaves.Log("SafeSaves: Could not load items in " + type.ToString() + "!");
                         if (ContinueLoadingAnyways)
                             return true;
                         return worked;
@@ -209,9 +209,9 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Crash on operation " + e);
+                DebugSafeSaves.LogError("SafeSaves: Crash on operation " + e);
             }
-            Debug.LogError("SafeSaves: Could not set encoded ID?!?");
+            DebugSafeSaves.LogError("SafeSaves: Could not set encoded ID?!?");
             return false;
         }
         internal bool LoadModuleFieldOnVisible<T>(Visible currentInst, ref T field)
@@ -220,7 +220,7 @@ namespace SafeSaves
             {
                 if (currentInst == null)
                 {
-                    Debug.Log("SafeSaves: Could not find the SerializedVisible " + visID + " for the component " + type.ToString() + "!");
+                    DebugSafeSaves.Log("SafeSaves: Could not find the SerializedVisible " + visID + " for the component " + type.ToString() + "!");
                     //return false;
                 }
                 if (!CanLoad())
@@ -240,7 +240,7 @@ namespace SafeSaves
                             }
                         }
                         if (!worked)
-                            Debug.Log("SafeSaves: Could not load items in " + type.ToString() + "!");
+                            DebugSafeSaves.Log("SafeSaves: Could not load items in " + type.ToString() + "!");
                         if (ContinueLoadingAnyways)
                             return true;
                         return worked;
@@ -249,9 +249,9 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Crash on operation " + e);
+                DebugSafeSaves.LogError("SafeSaves: Crash on operation " + e);
             }
-            Debug.LogError("SafeSaves: Could not set encoded ID?!?");
+            DebugSafeSaves.LogError("SafeSaves: Could not set encoded ID?!?");
             return false;
         }
       
@@ -260,7 +260,7 @@ namespace SafeSaves
             var valIn = (object)val;
             if (!LoadState<T>(saveable.Name, valIn, out object valOut))
             {
-                Debug.Log("SafeSaves: Autocast - Could not load item " + saveable.Name + " of " + type.ToString());
+                DebugSafeSaves.Log("SafeSaves: Autocast - Could not load item " + saveable.Name + " of " + type.ToString());
             }
             else
             {
@@ -305,8 +305,8 @@ namespace SafeSaves
                     }
                     catch (Exception e)
                     {
-                        Debug.Log("SafeSaves: Autocast - Failed trying to deal with item " + saveable.Name + " of " + type.ToString() + " which is " + saveable.FieldType.ToString() + ", valOut: " + (T)valOut);
-                        Debug.LogError("SafeSaves: Autocast - Error on operation in " + saveable.Name + " of " + type.ToString() + " | " + e);
+                        DebugSafeSaves.Log("SafeSaves: Autocast - Failed trying to deal with item " + saveable.Name + " of " + type.ToString() + " which is " + saveable.FieldType.ToString() + ", valOut: " + (T)valOut);
+                        DebugSafeSaves.LogError("SafeSaves: Autocast - Error on operation in " + saveable.Name + " of " + type.ToString() + " | " + e);
                     }
                 }
             }

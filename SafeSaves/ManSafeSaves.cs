@@ -72,7 +72,7 @@ namespace SafeSaves
             ValidateDirectory(SavesDirectory);
             inst = new GameObject("ManSafeSaves").AddComponent<ManSafeSaves>();
             ignoreSaving = false;
-            Debug.Log("SafeSaves: ManSafeSaves - Init");
+            DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Init");
         }
         private static bool isSubscribed = false;
         internal static void Subscribe()
@@ -83,7 +83,7 @@ namespace SafeSaves
             ManGameMode.inst.ModeSetupEvent.Subscribe(ModeLoad);
             ManGameMode.inst.ModeFinishedEvent.Subscribe(ModeFinished);
             ManTechs.inst.TankDestroyedEvent.Subscribe(TankDestroyed);
-            Debug.Log("SafeSaves: Core module hooks launched");
+            DebugSafeSaves.Log("SafeSaves: Core module hooks launched");
             isSubscribed = true;
         }
         private static void ModeSwitch()
@@ -102,7 +102,7 @@ namespace SafeSaves
         }
         public void ModeLoadDelayed()
         {
-            Debug.Log("SafeSaves: ManSafeSaves Loading from save " + Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false) + "!");
+            DebugSafeSaves.Log("SafeSaves: ManSafeSaves Loading from save " + Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false) + "!");
             LoadDataAutomatic();
         }
         private static void ModeFinished(Mode mode)
@@ -112,7 +112,7 @@ namespace SafeSaves
                 var saver = Singleton.Manager<ManSaveGame>.inst;
                 if (saver.IsSaveNameAutoSave(saver.GetCurrentSaveName(false)))
                 {
-                    Debug.Log("SafeSaves: ManSafeSaves Saving!");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves Saving!");
                     SaveDataAutomatic();
                 }
             }
@@ -167,12 +167,12 @@ namespace SafeSaves
                         }
                     }
                     RegisteredSaveDLLs.Add(nameHash);
-                    Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
+                    DebugSafeSaves.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
                 }
             }
             catch (Exception e)
             {
-                Debug.Log("SafeSaves: Could not register " + AEM.FullName + ", will try again." + e);
+                DebugSafeSaves.Log("SafeSaves: Could not register " + AEM.FullName + ", will try again." + e);
                 inst.queued.Add(new AssemblyQueue(AEM, null, null));
             }
         }
@@ -212,12 +212,12 @@ namespace SafeSaves
                         }
                     }
                     RegisteredSaveDLLs.Add(nameHash);
-                    Debug.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
+                    DebugSafeSaves.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
                 }
             }
             catch
             {
-                Debug.Log("SafeSaves: Could not register " + AEM.FullName + ", will try again.");
+                DebugSafeSaves.Log("SafeSaves: Could not register " + AEM.FullName + ", will try again.");
                 inst.queued.Add(new AssemblyQueue(AEM, OnSave, OnLoad));
             }
         }
@@ -252,7 +252,7 @@ namespace SafeSaves
                     }
                 }
                 RegisteredSaveDLLs.Remove(nameHash);
-                Debug.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
+                DebugSafeSaves.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
             }
         }
         /// <summary>
@@ -289,7 +289,7 @@ namespace SafeSaves
                 onSaving.Unsubscribe(OnSave);
                 onLoading.Unsubscribe(OnLoad);
                 RegisteredSaveDLLs.Remove(nameHash);
-                Debug.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
+                DebugSafeSaves.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
             }
         }
 
@@ -321,12 +321,12 @@ namespace SafeSaves
             try
             {
                 string serial = currentSave.GetSaveStateTank(inst);
-                Debug.Assert(serial == null, "SafeSaves: ManSafeSaves - GetSerialOfTank: FAILIURE IN OPERATION!  Output was null!");
+                DebugSafeSaves.Assert(serial == null, "SafeSaves: ManSafeSaves - GetSerialOfTank: FAILIURE IN OPERATION!  Output was null!");
                 return serial;
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - GetSerialOfTank: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - GetSerialOfTank: FAILIURE IN OPERATION! " + e);
             }
             return null;
         }
@@ -344,7 +344,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - LoadSerialToTank: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - LoadSerialToTank: FAILIURE IN OPERATION! " + e);
             }
         }
 
@@ -364,7 +364,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION! " + e);
             }
             return false;
         }
@@ -385,7 +385,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION! " + e);
             }
             return false;
         }
@@ -406,7 +406,7 @@ namespace SafeSaves
             }
             catch
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION!");
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION!");
             }
             return false;
         }
@@ -426,7 +426,7 @@ namespace SafeSaves
             }
             catch
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION!");
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - OnBlockSerialization: FAILIURE IN OPERATION!");
             }
             return false;
         }
@@ -446,7 +446,7 @@ namespace SafeSaves
             onSaving.Send(true);
             if (defaultState)
             {
-                Debug.Log("SafeSaves: Resetting SafeSave for new save instance...");
+                DebugSafeSaves.Log("SafeSaves: Resetting SafeSave for new save instance...");
                 currentSave = new SafeSave();
             }
             currentSave.SaveStateALL();
@@ -458,7 +458,7 @@ namespace SafeSaves
             onLoading.Send(true);
             if (save == null)
             {
-                Debug.Log("SafeSaves: ManSafeSaves - Save is corrupted!");
+                DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Save is corrupted!");
                 currentSave = new SafeSave();
                 return;
             }
@@ -479,7 +479,7 @@ namespace SafeSaves
             }
             catch
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - LoadDataAutomatic: FAILIURE IN MAJOR OPERATION!");
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - LoadDataAutomatic: FAILIURE IN MAJOR OPERATION!");
             }
         }
         internal static void SaveDataAutomatic()
@@ -492,7 +492,7 @@ namespace SafeSaves
             }
             catch
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - SaveDataAutomatic: FAILIURE IN MAJOR OPERATION!");
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - SaveDataAutomatic: FAILIURE IN MAJOR OPERATION!");
             }
         }
 
@@ -522,7 +522,7 @@ namespace SafeSaves
                                     }
                                 }
                             }
-                            Debug.Log("SafeSaves: Loaded " + compressFileName + " for " + saveName + " successfully.");
+                            DebugSafeSaves.Log("SafeSaves: Loaded " + compressFileName + " for " + saveName + " successfully.");
                         }
                         else if (File.Exists(destination + ".json"))
                         {
@@ -530,7 +530,7 @@ namespace SafeSaves
                             output = File.ReadAllText(destination + ".json");
 
                             DeserializeToManager(output);
-                            Debug.Log("SafeSaves: Loaded SafeSave.json for " + saveName + " successfully.");
+                            DebugSafeSaves.Log("SafeSaves: Loaded SafeSave.json for " + saveName + " successfully.");
                         }
                     }
                     else
@@ -541,7 +541,7 @@ namespace SafeSaves
                             output = File.ReadAllText(destination + ".json");
 
                             DeserializeToManager(output);
-                            Debug.Log("SafeSaves: Loaded SafeSave.json for " + saveName + " successfully.");
+                            DebugSafeSaves.Log("SafeSaves: Loaded SafeSave.json for " + saveName + " successfully.");
                         }
                         else if (File.Exists(destination + compressFileName))
                         {
@@ -555,14 +555,14 @@ namespace SafeSaves
                                     }
                                 }
                             }
-                            Debug.Log("SafeSaves: Loaded " + compressFileName + " for " + saveName + " successfully.");
+                            DebugSafeSaves.Log("SafeSaves: Loaded " + compressFileName + " for " + saveName + " successfully.");
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError("SafeSaves: Could not load contents of MissionSave.json/.SMSAV for " + saveName + "!");
-                    Debug.Log(e);
+                    DebugSafeSaves.LogError("SafeSaves: Could not load contents of MissionSave.json/.SMSAV for " + saveName + "!");
+                    DebugSafeSaves.Log(e);
                     return;
                 }
                 return;
@@ -572,12 +572,12 @@ namespace SafeSaves
                 try
                 {
                     File.WriteAllText(destination + ".json", SerializeFromManager(true));
-                    Debug.Log("SafeSaves: Created new SafeSave.json for " + saveName + " successfully.");
+                    DebugSafeSaves.Log("SafeSaves: Created new SafeSave.json for " + saveName + " successfully.");
                     return;
                 }
                 catch
                 {
-                    Debug.Log("SafeSaves: Could not read SafeSave.json for " + saveName + ".  \n   This could be due to a bug with this mod or file permissions.");
+                    DebugSafeSaves.Log("SafeSaves: Could not read SafeSave.json for " + saveName + ".  \n   This could be due to a bug with this mod or file permissions.");
                     return;
                 }
             }
@@ -587,7 +587,7 @@ namespace SafeSaves
         {
             if (IgnoreSaving)
                 return;
-            Debug.Log("SafeSaves: Setting up template reference...");
+            DebugSafeSaves.Log("SafeSaves: Setting up template reference...");
             string destination = SavesDirectory + up + altDirectory + up + saveName;
             ValidateDirectory(SavesDirectory);
             ValidateDirectory(SavesDirectory + up + altDirectory);
@@ -608,18 +608,18 @@ namespace SafeSaves
                         }
                     }
                     CleanUpCache();
-                    Debug.Log("SafeSaves: Saved " + compressFileName + " for " + saveName + " successfully.");
+                    DebugSafeSaves.Log("SafeSaves: Saved " + compressFileName + " for " + saveName + " successfully.");
                 }
                 else
                 {
                     File.WriteAllText(destination + ".json", SerializeFromManager());
                     CleanUpCache();
-                    Debug.Log("SafeSaves: Saved SafeSave.json for " + saveName + " successfully.");
+                    DebugSafeSaves.Log("SafeSaves: Saved SafeSave.json for " + saveName + " successfully.");
                 }
             }
             catch
             {
-                Debug.LogError("SafeSaves: Could not save SafeSave.json/" + compressFileName + " for " + saveName + ".  \n   This could be due to a bug with this mod or file permissions.");
+                DebugSafeSaves.LogError("SafeSaves: Could not save SafeSave.json/" + compressFileName + " for " + saveName + ".  \n   This could be due to a bug with this mod or file permissions.");
                 return;
             }
         }
@@ -662,15 +662,15 @@ namespace SafeSaves
                 return;// error
             if (!Directory.Exists(DirectoryIn))
             {
-                Debug.Log("SafeSaves: Generating " + name + " folder.");
+                DebugSafeSaves.Log("SafeSaves: Generating " + name + " folder.");
                 try
                 {
                     Directory.CreateDirectory(DirectoryIn);
-                    Debug.Log("SafeSaves: Made new " + name + " folder successfully.");
+                    DebugSafeSaves.Log("SafeSaves: Made new " + name + " folder successfully.");
                 }
                 catch
                 {
-                    Debug.LogError("SafeSaves: Could not create new " + name + " folder.  \n   This could be due to a bug with this mod or file permissions.");
+                    DebugSafeSaves.LogError("SafeSaves: Could not create new " + name + " folder.  \n   This could be due to a bug with this mod or file permissions.");
                     return;
                 }
             }

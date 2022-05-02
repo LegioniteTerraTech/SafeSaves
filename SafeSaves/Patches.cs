@@ -63,18 +63,18 @@ namespace SafeSaves
                     return ManSafeSaves.SaveBlockToSave(inst.GetComponent<TankBlock>(), inst);
                 else
                 {
-                    Debug.Log("SafeSaves: ManSafeSaves - SerializeToSafe: Please register your Assembly(.dll) with class "
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - SerializeToSafe: Please register your Assembly(.dll) with class "
                         + typeof(T) + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this. "
                         + StackTraceUtility.ExtractStackTrace().ToString());
 
-                    Debug.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
                     ManSafeSaves.RegisterSaveSystem(Assembly.GetCallingAssembly());
-                    Debug.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - SerializeToSafe: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - SerializeToSafe: FAILIURE IN OPERATION! " + e);
             }
             return false;
         }
@@ -98,18 +98,18 @@ namespace SafeSaves
                     return ManSafeSaves.SaveBlockComplexFieldToSave(inst.GetComponent<TankBlock>(), inst, Field);
                 else
                 {
-                    Debug.Log("SafeSaves: ManSafeSaves - SerializeToSafeObject: Please register your Assembly(.dll) with class "
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - SerializeToSafeObject: Please register your Assembly(.dll) with class "
                         + typeof(T) + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this. "
                         + StackTraceUtility.ExtractStackTrace().ToString());
 
-                    Debug.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
                     ManSafeSaves.RegisterSaveSystem(Assembly.GetCallingAssembly());
-                    Debug.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - SerializeToSafeObject: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - SerializeToSafeObject: FAILIURE IN OPERATION! " + e);
             }
             return false;
         }
@@ -134,18 +134,18 @@ namespace SafeSaves
                     return ManSafeSaves.LoadBlockFromSave(inst.GetComponent<TankBlock>(), inst);
                 else
                 {
-                    Debug.Log("SafeSaves: ManSafeSaves - DeserializeFromSafe: Please register your Assembly(.dll) with class "
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - DeserializeFromSafe: Please register your Assembly(.dll) with class "
                         + typeof(T) + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this. "
                         + StackTraceUtility.ExtractStackTrace().ToString());
 
-                    Debug.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
                     ManSafeSaves.RegisterSaveSystem(Assembly.GetCallingAssembly());
-                    Debug.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - DeserializeFromSafe: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - DeserializeFromSafe: FAILIURE IN OPERATION! " + e);
             }
             return false;
         }
@@ -170,18 +170,18 @@ namespace SafeSaves
                     return ManSafeSaves.LoadBlockComplexFieldFromSave(inst.GetComponent<TankBlock>(), inst, ref Field);
                 else
                 {
-                    Debug.Log("SafeSaves: ManSafeSaves - DeserializeFromSafeObject: Please register your Assembly(.dll) with class "
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - DeserializeFromSafeObject: Please register your Assembly(.dll) with class "
                         + typeof(T) + " in SafeSaves.ManSafeSaves.RegisterSaveSystem() first before calling this. "
                         + StackTraceUtility.ExtractStackTrace().ToString());
 
-                    Debug.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Trying to auto-register...");
                     ManSafeSaves.RegisterSaveSystem(Assembly.GetCallingAssembly());
-                    Debug.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Auto-register successful...");
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: ManSafeSaves - DeserializeFromSafeObject: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - DeserializeFromSafeObject: FAILIURE IN OPERATION! " + e);
             }
             return false;
         }
@@ -201,7 +201,7 @@ namespace SafeSaves
 
         public override void EarlyInit()
         {
-            Debug.Log("KickStartSafeSaves - INITEarly");
+            DebugSafeSaves.Log("KickStartSafeSaves - INITEarly");
             if (oInst == null)
             {
                 oInst = this;
@@ -242,7 +242,7 @@ namespace SafeSaves
         {
             private static void Prefix(ref ManGameMode.GameType gameType, ref string saveName)
             {
-                Debug.Log("SafeSaves: Saving!");
+                DebugSafeSaves.Log("SafeSaves: Saving!");
                 ManSafeSaves.SaveData(saveName, ManGameMode.inst.GetCurrentGameMode());
             }
         }

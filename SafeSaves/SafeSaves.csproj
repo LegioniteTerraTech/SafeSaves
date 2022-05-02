@@ -44,11 +44,25 @@
     <OutputPath>bin\SteamLone\</OutputPath>
     <DefineConstants>STEAM, LONE</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Steam'OR'$(Configuration)'=='SteamLone'">
+    <!--> zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz </!-->
+    <!--> THE MATTERS BELOW ARE OFFICIAL </!-->
+    <!--> zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz </!-->
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\workshop\content\285920\2571814511\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Release'OR'$(Configuration)'=='Debug'">
+    <!--> zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz </!-->
+    <!--> THE MATTERS BELOW ARE UNOFFICIAL </!-->
+    <!--> zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz </!-->
     <Reference Include="0Harmony">
       <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\TerraTech\TerraTechWin64_Data\Managed\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\TerraTech\TerraTechWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
@@ -91,7 +105,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Debug.cs" />
+    <Compile Include="DebugSafeSaves.cs" />
     <Compile Include="ManSafeSaves.cs" />
     <Compile Include="Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

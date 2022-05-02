@@ -75,7 +75,7 @@ namespace SafeSaves
                 return (Assembly.GetCallingAssembly().GetName() + "|" + saveFieldID).GetHashCode();
             }
             catch { }
-            Debug.LogError("SafeSaves: Could not get encoded ID?!?");
+            DebugSafeSaves.LogError("SafeSaves: Could not get encoded ID?!?");
             return 0;
         }
         public bool CanLoad()
@@ -85,20 +85,20 @@ namespace SafeSaves
                 if (type == null)
                 {
                     if (typeString != null)
-                        Debug.Log("SafeSaves: CanLoad - Could not load type of " + typeString + " because it's respective assembly is not accessable.");
+                        DebugSafeSaves.Log("SafeSaves: CanLoad - Could not load type of " + typeString + " because it's respective assembly is not accessable.");
                     else
-                        Debug.Log("SafeSaves: CanLoad - Could not load because there is no saved type that this entry references.");
+                        DebugSafeSaves.Log("SafeSaves: CanLoad - Could not load because there is no saved type that this entry references.");
                     return false;
                 }
                 if (corrupted)
                 {
-                    Debug.Log("SafeSaves: CanLoad - Could not load because the saved entry was corrupted.");
+                    DebugSafeSaves.Log("SafeSaves: CanLoad - Could not load because the saved entry was corrupted.");
                     return false;
                 }
             }
             catch (Exception e)
             {
-                Debug.Log("SafeSaves: CanLoad - Could not load because of technical error " + e);
+                DebugSafeSaves.Log("SafeSaves: CanLoad - Could not load because of technical error " + e);
             }
             return true;
         }
@@ -121,7 +121,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.Log("SafeSaves: SaveState - error " + e);
+                DebugSafeSaves.Log("SafeSaves: SaveState - error " + e);
             }
             return false;
         }
@@ -155,7 +155,7 @@ namespace SafeSaves
             {
                 if (corrupted)
                 {
-                    Debug.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
+                    DebugSafeSaves.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
                     return false;
                 }
                 if (serialized.TryGetValue(GetEncodedID(saveFieldID), out string serial))
@@ -169,7 +169,7 @@ namespace SafeSaves
                         }
                         else
                         {
-                            Debug.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
+                            DebugSafeSaves.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
                             return false;
                         }
                     }
@@ -180,7 +180,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.Log("SafeSaves: LoadState - Could not load item ! " + e);
+                DebugSafeSaves.Log("SafeSaves: LoadState - Could not load item ! " + e);
             }
             return false;
         }
@@ -200,7 +200,7 @@ namespace SafeSaves
             {
                 if (corrupted)
                 {
-                    Debug.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
+                    DebugSafeSaves.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
                     return false;
                 }
                 if (serialized.TryGetValue(GetEncodedID(saveFieldID), out string serial))
@@ -214,7 +214,7 @@ namespace SafeSaves
                         }
                         else
                         {
-                            Debug.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
+                            DebugSafeSaves.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
                             return false;
                         }
                     }
@@ -225,7 +225,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.Log("SafeSaves: LoadState - Could not load item ! " + e);
+                DebugSafeSaves.Log("SafeSaves: LoadState - Could not load item ! " + e);
             }
             return false;
         }
@@ -247,7 +247,7 @@ namespace SafeSaves
             {
                 if (corrupted)
                 {
-                    Debug.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
+                    DebugSafeSaves.Log("SafeSaves: Could not load item!  DATA CORRUPTED");
                     return false;
                 }
                 if (serialized.TryGetValue(GetEncodedID(saveFieldID), out string serial))
@@ -263,7 +263,7 @@ namespace SafeSaves
                             }
                             else
                             {
-                                Debug.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
+                                DebugSafeSaves.Log("SafeSaves: Could not load item!  Object was modified, but then lost!");
                                 return false;
                             }
                         }
@@ -272,7 +272,7 @@ namespace SafeSaves
                     }
                     catch (Exception e)
                     {
-                        Debug.Log("SafeSaves: LoadState(FALLBACK) - Could not load item! " + e);
+                        DebugSafeSaves.Log("SafeSaves: LoadState(FALLBACK) - Could not load item! " + e);
                         objToApplyTo = (T)JsonConvert.DeserializeObject(serial, JSONSaver);
                     }
                     return true;
@@ -280,7 +280,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.Log("SafeSaves: LoadState - Could not load item ! " + e);
+                DebugSafeSaves.Log("SafeSaves: LoadState - Could not load item ! " + e);
             }
             return false;
         }
@@ -297,12 +297,12 @@ namespace SafeSaves
                 if (objToSave is MonoBehaviour)
                 {   // uh-oh, we can't directly touch this
                     serial = JsonConvert.SerializeObject(MakeCompat(objToSave), JSONSaver);
-                    Debug.Info("SafeSaves: SaveStateInternal - Saved MonoBehavior " + ID);
+                    DebugSafeSaves.Info("SafeSaves: SaveStateInternal - Saved MonoBehavior " + ID);
                 }
                 else
                 {
                     serial = JsonConvert.SerializeObject(objToSave, JSONSaver);
-                    Debug.Info("SafeSaves: SaveStateInternal - Saved Normal Field " + ID);
+                    DebugSafeSaves.Info("SafeSaves: SaveStateInternal - Saved Normal Field " + ID);
                 }
                 if (serialized.TryGetValue(ID, out _))
                 {
@@ -313,7 +313,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.Log("SafeSaves: SaveStateInternal - error " + e);
+                DebugSafeSaves.Log("SafeSaves: SaveStateInternal - error " + e);
             }
             return false;
         }
@@ -323,7 +323,7 @@ namespace SafeSaves
         private static Dictionary<string, object> MakeCompat<T>(T convert)
         {
             List<PropertyInfo> PI = convert.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
-            Debug.Log("SafeSaves: MakeCompat - Compiling " + convert.GetType() + " which has " + PI.Count() + " properties");
+            DebugSafeSaves.Log("SafeSaves: MakeCompat - Compiling " + convert.GetType() + " which has " + PI.Count() + " properties");
             Dictionary<string, object> converted = new Dictionary<string, object>();
             foreach (PropertyInfo PIC in PI)
             {
@@ -363,14 +363,14 @@ namespace SafeSaves
                     }
                     catch
                     {   // report missing component 
-                        Debug.LogError("SafeSaves: Error in " + toLoadFor.GetType() + " save format.\n No such variable exists: " + (entry.Key.NullOrEmpty() ? entry.Key : "ENTRY IS NULL OR EMPTY"));
+                        DebugSafeSaves.LogError("SafeSaves: Error in " + toLoadFor.GetType() + " save format.\n No such variable exists: " + (entry.Key.NullOrEmpty() ? entry.Key : "ENTRY IS NULL OR EMPTY"));
                     }
                 }
                 return true;
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Error in " + toLoadFor.GetType() + " save format.\n GameObject case: " + e);
+                DebugSafeSaves.LogError("SafeSaves: Error in " + toLoadFor.GetType() + " save format.\n GameObject case: " + e);
             }
             return false;
         }
@@ -405,14 +405,14 @@ namespace SafeSaves
                     }
                     catch
                     {   // report missing component 
-                        Debug.LogError("SafeSaves: Error in " + type + " save format.\n No such variable exists: " + (entry.Key.NullOrEmpty() ? entry.Key : "ENTRY IS NULL OR EMPTY"));
+                        DebugSafeSaves.LogError("SafeSaves: Error in " + type + " save format.\n No such variable exists: " + (entry.Key.NullOrEmpty() ? entry.Key : "ENTRY IS NULL OR EMPTY"));
                     }
                 }
                 return true;
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Error in " + type + " save format.\n GameObject case: " + e);
+                DebugSafeSaves.LogError("SafeSaves: Error in " + type + " save format.\n GameObject case: " + e);
             }
             return false;
         }
@@ -430,14 +430,14 @@ namespace SafeSaves
                     }
                     catch
                     {   // report missing component 
-                        Debug.LogError("SafeSaves: Error in save format.\n Could not load serial of ID " + entry.Key);
+                        DebugSafeSaves.LogError("SafeSaves: Error in save format.\n Could not load serial of ID " + entry.Key);
                     }
                 }
                 return serials;
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Error in save format.\n GameObject case: " + e);
+                DebugSafeSaves.LogError("SafeSaves: Error in save format.\n GameObject case: " + e);
             }
             return serials;
         }
@@ -455,13 +455,13 @@ namespace SafeSaves
                     }
                     catch (Exception e)
                     {
-                        Debug.LogError("SafeSaves: Error in Loading from serial." + e);
+                        DebugSafeSaves.LogError("SafeSaves: Error in Loading from serial." + e);
                     }
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Error in Loading from serial." + e);
+                DebugSafeSaves.LogError("SafeSaves: Error in Loading from serial." + e);
             }
         }
     }

@@ -29,7 +29,7 @@ namespace SafeSaves
             if (type == null)
             {
                 corrupted = true;
-                Debug.LogError("SafeSaves: Was given a null Manager to save! " + StackTraceUtility.ExtractStackTrace());
+                DebugSafeSaves.LogError("SafeSaves: Was given a null Manager to save! " + StackTraceUtility.ExtractStackTrace());
                 return;
             }
             this.type = type;
@@ -60,7 +60,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Could not set values - " + e);
+                DebugSafeSaves.LogError("SafeSaves: Could not set values - " + e);
             }
             return false;
         }
@@ -90,7 +90,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                Debug.LogError("SafeSaves: Could not set values - " + e);
+                DebugSafeSaves.LogError("SafeSaves: Could not set values - " + e);
             }
             return false;
         }
