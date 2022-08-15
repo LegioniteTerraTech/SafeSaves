@@ -45,5 +45,15 @@ namespace SafeSaves
         {
             UnityEngine.Debug.Log("SafeSaves: ENCOUNTERED CRITICAL ERROR");
         }
+        internal static void FatalError(string e)
+        {
+            try
+            {
+                ManUI.inst.ShowErrorPopup("SafeSaves: ENCOUNTERED CRITICAL ERROR: " + e);
+            }
+            catch { }
+            UnityEngine.Debug.Log("SafeSaves: ENCOUNTERED CRITICAL ERROR");
+            UnityEngine.Debug.Log("SafeSaves: MAY NOT WORK PROPERLY AFTER THIS ERROR, PLEASE REPORT!");
+        }
     }
 }

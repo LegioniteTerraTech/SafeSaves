@@ -58,6 +58,11 @@ namespace SafeSaves
         {
             if (inst)
                 return;
+#if STEAM
+            DebugSafeSaves.Log("RandomAdditions: MAIN (Steam Workshop Version) startup");
+#else
+            DebugSafeSaves.Log("RandomAdditions: MAIN (TTMM Version) startup");
+#endif
             harmonyInst = new Harmony("legionite.safesaves");
             harmonyInst.PatchAll(Assembly.GetExecutingAssembly());
             if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX)
@@ -72,7 +77,7 @@ namespace SafeSaves
             ValidateDirectory(SavesDirectory);
             inst = new GameObject("ManSafeSaves").AddComponent<ManSafeSaves>();
             ignoreSaving = false;
-            DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Init");
+            DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Inited");
         }
         private static bool isSubscribed = false;
         internal static void Subscribe()
