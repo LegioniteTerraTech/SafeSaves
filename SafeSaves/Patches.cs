@@ -205,7 +205,6 @@ namespace SafeSaves
             if (oInst == null)
             {
                 oInst = this;
-                ManSafeSaves.Init();
             }
         }
         public override void Init()
@@ -227,11 +226,11 @@ namespace SafeSaves
 
     public class Patches
     {
-        [HarmonyPatch(typeof(ModeAttract))]
-        [HarmonyPatch("SetupTechs")]// Setup main menu techs
+        [HarmonyPatch(typeof(Mode))]
+        [HarmonyPatch("UpdateMode")]// Setup main menu techs
         internal static class Subscribe
         {
-            private static void Postfix()
+            private static void Prefix()
             {
                 ManSafeSaves.Subscribe();
             }

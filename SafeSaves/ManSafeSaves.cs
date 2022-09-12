@@ -58,10 +58,12 @@ namespace SafeSaves
         {
             if (inst)
                 return;
-#if STEAM
-            DebugSafeSaves.Log("RandomAdditions: MAIN (Steam Workshop Version) startup");
+#if LONE
+            DebugSafeSaves.Log("SafeSaves: MAIN (Steam Workshop Version LONE) startup");
+#elif STEAM
+            DebugSafeSaves.Log("SafeSaves: MAIN (Steam Workshop Version2) startup");
 #else
-            DebugSafeSaves.Log("RandomAdditions: MAIN (TTMM Version) startup");
+            DebugSafeSaves.Log("SafeSaves: MAIN (TTMM Version) startup");
 #endif
             harmonyInst = new Harmony("legionite.safesaves");
             harmonyInst.PatchAll(Assembly.GetExecutingAssembly());
@@ -82,7 +84,7 @@ namespace SafeSaves
         private static bool isSubscribed = false;
         internal static void Subscribe()
         {
-            if (isSubscribed)
+            if (isSubscribed || !ManGameMode.inst || !ManTechs.inst)
                 return;
             ManGameMode.inst.ModeSwitchEvent.Subscribe(ModeSwitch);
             ManGameMode.inst.ModeSetupEvent.Subscribe(ModeLoad);
@@ -150,6 +152,8 @@ namespace SafeSaves
         {
             try
             {
+                Init();
+                Subscribe();
                 int nameHash = AEM.GetName().Name.GetHashCode();
                 if (!RegisteredSaveDLLs.Contains(nameHash))
                 {
@@ -193,6 +197,8 @@ namespace SafeSaves
         {
             try
             {
+                Init();
+                Subscribe();
                 int nameHash = AEM.GetName().Name.GetHashCode();
                 if (!RegisteredSaveDLLs.Contains(nameHash))
                 {
