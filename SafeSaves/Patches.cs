@@ -59,7 +59,7 @@ namespace SafeSaves
         {
             try
             {
-                if (ManSafeSaves.RegisteredModules.Contains(typeof(T)))
+                if (ManSafeSaves.GetRegisteredModules().Contains(typeof(T)))
                     return ManSafeSaves.SaveBlockToSave(inst.GetComponent<TankBlock>(), inst);
                 else
                 {
@@ -94,8 +94,10 @@ namespace SafeSaves
         {
             try
             {
-                if (ManSafeSaves.RegisteredModules.Contains(typeof(T)))
+                if (ManSafeSaves.GetRegisteredModules().Contains(typeof(T)))
+                {
                     return ManSafeSaves.SaveBlockComplexFieldToSave(inst.GetComponent<TankBlock>(), inst, Field);
+                }
                 else
                 {
                     DebugSafeSaves.Log("SafeSaves: ManSafeSaves - SerializeToSafeObject: Please register your Assembly(.dll) with class "
@@ -109,7 +111,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - SerializeToSafeObject: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - SerializeToSafeObject: FAILIURE IN OPERATION! \n" + e);
             }
             return false;
         }
@@ -130,7 +132,7 @@ namespace SafeSaves
         {
             try
             {
-                if (ManSafeSaves.RegisteredModules.Contains(typeof(T)))
+                if (ManSafeSaves.GetRegisteredModules().Contains(typeof(T)))
                     return ManSafeSaves.LoadBlockFromSave(inst.GetComponent<TankBlock>(), inst);
                 else
                 {
@@ -145,7 +147,7 @@ namespace SafeSaves
             }
             catch (Exception e)
             {
-                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - DeserializeFromSafe: FAILIURE IN OPERATION! " + e);
+                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - DeserializeFromSafe: FAILIURE IN OPERATION! \n" + e);
             }
             return false;
         }
@@ -166,7 +168,7 @@ namespace SafeSaves
         {
             try
             {
-                if (ManSafeSaves.RegisteredModules.Contains(typeof(T)))
+                if (ManSafeSaves.GetRegisteredModules().Contains(typeof(T)))
                     return ManSafeSaves.LoadBlockComplexFieldFromSave(inst.GetComponent<TankBlock>(), inst, ref Field);
                 else
                 {

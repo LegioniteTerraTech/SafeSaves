@@ -16,6 +16,8 @@ namespace SafeSaves
     /// </summary>
     public class SSaveManagerSerial : SSaveSerial
     {
+        private static bool ContinueLoadingOnErrorAnyways = false;
+
         /// <summary>
         /// ONLY USED FOR NEWTONSOFT
         /// </summary>
@@ -29,7 +31,7 @@ namespace SafeSaves
             if (type == null)
             {
                 corrupted = true;
-                DebugSafeSaves.LogError("SafeSaves: Was given a null Manager to save! " + StackTraceUtility.ExtractStackTrace());
+                DebugSafeSaves.LogError("SafeSaves: Was given a null Manager to save!");
                 return;
             }
             this.type = type;
@@ -40,27 +42,37 @@ namespace SafeSaves
         {
             try
             {
-                FieldInfo[] FI = type.GetFields();
+                DebugSafeSaves.Log("SafeSaves: SaveManager() - Trying to save from " + type.Name);
+                FieldInfo[] FI = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
                 foreach (FieldInfo item in FI)
                 {
                     if (item.GetCustomAttribute(typeof(SSManagerInstAttribute)) != null)
                     {
+                        DebugSafeSaves.Log("SafeSaves: Saving " + item.Name + " of " + type.ToString());
+                        bool worked = true;
                         object managerInst = item.GetValue(null);
 
                         foreach (FieldInfo saveable in FI)
                         {
                             if (saveable.GetCustomAttribute(typeof(SSaveFieldAttribute)) != null)
                             {
-                                SaveState(saveable.Name, saveable.GetValue(managerInst));
+                                if (!SaveState(saveable.Name, saveable.GetValue(managerInst)))
+                                {
+                                    worked = false;
+                                    DebugSafeSaves.Log("SafeSaves: Could not save item " + saveable.Name + " of " + type.ToString());
+                                }
                             }
                         }
+                        if (!worked)
+                            DebugSafeSaves.Log("SafeSaves: Could not save items in " + type.ToString() + "!");
                         return true;
                     }
                 }
+                DebugSafeSaves.Log("SafeSaves: SaveManager() - Could not find manager for " + type.Name + " to save to!");
             }
             catch (Exception e)
             {
-                DebugSafeSaves.LogError("SafeSaves: Could not set values - " + e);
+                DebugSafeSaves.LogError("SafeSaves: SaveManager() - Could not save values for " + type.FullName + " - " + e);
             }
             return false;
         }
@@ -70,27 +82,39 @@ namespace SafeSaves
             {
                 if (!CanLoad())
                     return false;
-                FieldInfo[] FI = type.GetFields();
+                DebugSafeSaves.Log("SafeSaves: LoadToManager() - Trying to load to " + type.Name);
+                FieldInfo[] FI = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
                 foreach (FieldInfo item in FI)
                 {
                     if (item.GetCustomAttribute(typeof(SSManagerInstAttribute)) != null)
                     {
                         object managerInst = item.GetValue(null);
 
+                        bool worked = true;
                         foreach (FieldInfo saveable in FI)
                         {
                             if (saveable.GetCustomAttribute(typeof(SSaveFieldAttribute)) != null)
                             {
-                                LoadState(type, saveable.Name, managerInst, out _);
+                                var val = saveable.GetValue(managerInst);
+                                if (!Autocast(val, saveable, managerInst))
+                                {
+                                    worked = false;
+                                    DebugSafeSaves.Log("SafeSaves: Could not load item " + saveable.Name + "!");
+                                }
                             }
                         }
-                        return true;
+                        if (!worked)
+                            DebugSafeSaves.Log("SafeSaves: Could not load items in " + type.ToString() + "!");
+                        if (ContinueLoadingOnErrorAnyways)
+                            return true;
+                        return worked;
                     }
                 }
+                DebugSafeSaves.Log("SafeSaves: LoadToManager() - Could not find manager for " + type.Name + " to load to!");
             }
             catch (Exception e)
             {
-                DebugSafeSaves.LogError("SafeSaves: Could not set values - " + e);
+                DebugSafeSaves.LogError("SafeSaves: LoadToManager() - Could not set values for " + type.FullName + " - " + e);
             }
             return false;
         }

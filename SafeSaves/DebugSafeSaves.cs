@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace SafeSaves
 {
-    internal static class DebugSafeSaves
+    public static class DebugSafeSaves
     {
-        internal static bool LogAll = false;
+        public static bool LogAll = false;
         internal static bool ShouldLog = true;
 
         internal static void Info(string message)

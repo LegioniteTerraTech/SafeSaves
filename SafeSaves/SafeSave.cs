@@ -406,12 +406,15 @@ namespace SafeSaves
         internal void SaveManagers()
         {
             AllManagerEntries.Clear();
-            foreach (var type in ManSafeSaves.RegisteredManagers)
+            foreach (var type in ManSafeSaves.GetRegisteredManagers())
             {
-                foreach (var field in type.GetFields())
+                DebugSafeSaves.Info("SafeSaves: SaveManagers - Checking " + type.Name + ".");
+                foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance))
                 {
-                    if (field.GetCustomAttributes(true).Contains(typeof(SSManagerInstAttribute)))
+                    DebugSafeSaves.Info("SafeSaves: SaveManagers - Field " + field.Name + ".");
+                    if (field.GetCustomAttribute(typeof(SSManagerInstAttribute)) != null)
                     {   // Save the manager
+                        DebugSafeSaves.Info("SafeSaves: SaveManagers - Saving " + field.Name + ".");
                         AllManagerEntries.Add(new SSaveManagerSerial(type));
                     }
                 }
@@ -420,13 +423,18 @@ namespace SafeSaves
 
         internal void LoadManagers()
         {
+            DebugSafeSaves.Log("SafeSaves: There are " + AllManagerEntries.Count + " managers saved.");
             foreach (var saveMan in AllManagerEntries)
             {
                 try
                 {
+                    DebugSafeSaves.Info("SafeSaves: SaveManagers - Loading " + saveMan.typeString + ".");
                     saveMan.LoadToManager();
                 }
-                catch { }
+                catch
+                {
+                    DebugSafeSaves.Assert(true, "SafeSaves: SaveManagers - Loading " + saveMan.typeString + " Failed!");
+                }
             }
         }
 

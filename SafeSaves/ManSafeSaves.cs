@@ -11,6 +11,24 @@ using HarmonyLib;
 
 namespace SafeSaves
 {
+    internal class ManagedDLL
+    {
+        internal readonly Assembly DLL;
+        internal readonly Action<bool> onSaving;
+        internal readonly Action<bool> onLoading;
+        internal readonly HashSet<Type> RegisteredManagers;
+        internal readonly HashSet<Type> RegisteredModules;
+
+        public ManagedDLL(Assembly DLL, Action<bool> Saving, Action<bool> Loading)
+        {
+            this.DLL = DLL;
+            onSaving = Saving;
+            onLoading = Loading;
+            RegisteredManagers = new HashSet<Type>();
+            RegisteredModules = new HashSet<Type>();
+        }
+    }
+
     /// <summary>
     ///  MAKES a totally safe save seperate from TerraTech's main saving system for mods.
     ///  This is so that when the mod is removed, the game won't break.
@@ -25,7 +43,7 @@ namespace SafeSaves
     /// </summary>
     public class ManSafeSaves : MonoBehaviour
     {
-        internal static bool UseCompressor = true;
+        internal static bool UseCompressor = false;
 
         internal static string DLLDirectory;
         internal static string SavesDirectory;
@@ -41,11 +59,7 @@ namespace SafeSaves
             TypeNameHandling = TypeNameHandling.Auto,
         };
 
-        internal static Event<bool> onSaving = new Event<bool>();
-        internal static Event<bool> onLoading = new Event<bool>();
-        internal static List<int> RegisteredSaveDLLs = new List<int>();
-        internal static List<Type> RegisteredManagers = new List<Type>();
-        internal static List<Type> RegisteredModules = new List<Type>();
+        internal static readonly Dictionary<int, ManagedDLL> RegisteredSaveDLLs = new Dictionary<int, ManagedDLL>();
 
 
         private static ManSafeSaves inst;
@@ -110,7 +124,7 @@ namespace SafeSaves
         public void ModeLoadDelayed()
         {
             DebugSafeSaves.Log("SafeSaves: ManSafeSaves Loading from save " + Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false) + "!");
-            LoadDataAutomatic();
+            LoadData(null, ManGameMode.inst.GetCurrentGameMode());
         }
         private static void ModeFinished(Mode mode)
         {
@@ -120,7 +134,7 @@ namespace SafeSaves
                 if (saver.IsSaveNameAutoSave(saver.GetCurrentSaveName(false)))
                 {
                     DebugSafeSaves.Log("SafeSaves: ManSafeSaves Saving!");
-                    SaveDataAutomatic();
+                    SaveData(null, ManGameMode.inst.GetCurrentGameMode());
                 }
             }
         }
@@ -155,9 +169,12 @@ namespace SafeSaves
                 Init();
                 Subscribe();
                 int nameHash = AEM.GetName().Name.GetHashCode();
-                if (!RegisteredSaveDLLs.Contains(nameHash))
+                if (!RegisteredSaveDLLs.TryGetValue(nameHash, out _))
                 {
+                    ManagedDLL newDLL = new ManagedDLL(AEM, null, null);
                     Type[] types = FORCE_GET_TYPES(AEM);
+                    int manCount = 0;
+                    int modCount = 0;
                     for (int step = 0; step < types.Length; step++)
                     {
                         Type typeCase = types[step];
@@ -167,16 +184,19 @@ namespace SafeSaves
                         {
                             if (item is AutoSaveManagerAttribute)
                             {
-                                RegisteredManagers.Add(typeCase);
+                                newDLL.RegisteredManagers.Add(typeCase);
+                                manCount++;
                             }
                             else if (item is AutoSaveComponentAttribute)
                             {
-                                RegisteredModules.Add(typeCase);
+                                newDLL.RegisteredModules.Add(typeCase);
+                                modCount++;
                             }
                         }
                     }
-                    RegisteredSaveDLLs.Add(nameHash);
+                    RegisteredSaveDLLs.Add(nameHash, newDLL);
                     DebugSafeSaves.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
+                    DebugSafeSaves.Log("SafeSaves: Managers: " + manCount + ",  Modules: " + modCount + ".");
                 }
             }
             catch (Exception e)
@@ -200,11 +220,12 @@ namespace SafeSaves
                 Init();
                 Subscribe();
                 int nameHash = AEM.GetName().Name.GetHashCode();
-                if (!RegisteredSaveDLLs.Contains(nameHash))
+                if (!RegisteredSaveDLLs.TryGetValue(nameHash, out _))
                 {
-                    onSaving.Subscribe(OnSave);
-                    onLoading.Subscribe(OnLoad);
+                    ManagedDLL newDLL = new ManagedDLL(AEM, OnSave, OnLoad);
                     Type[] types = FORCE_GET_TYPES(AEM);
+                    int manCount = 0;
+                    int modCount = 0;
                     for (int step = 0; step < types.Length; step++)
                     {
                         Type typeCase = types[step];
@@ -214,16 +235,19 @@ namespace SafeSaves
                         {
                             if (item is AutoSaveManagerAttribute)
                             {
-                                RegisteredManagers.Add(typeCase);
+                                newDLL.RegisteredManagers.Add(typeCase);
+                                manCount++;
                             }
                             else if (item is AutoSaveComponentAttribute)
                             {
-                                RegisteredModules.Add(typeCase);
+                                newDLL.RegisteredModules.Add(typeCase);
+                                modCount++;
                             }
                         }
                     }
-                    RegisteredSaveDLLs.Add(nameHash);
+                    RegisteredSaveDLLs.Add(nameHash, newDLL);
                     DebugSafeSaves.Log("SafeSaves: Registered " + AEM.FullName + " with ManSafeSaves.");
+                    DebugSafeSaves.Log("SafeSaves: Managers: " + manCount + ",  Modules: " + modCount + ".");
                 }
             }
             catch
@@ -242,26 +266,8 @@ namespace SafeSaves
         public static void UnregisterSaveSystem(Assembly AEM)
         {
             int nameHash = AEM.GetName().Name.GetHashCode();
-            if (RegisteredSaveDLLs.Contains(nameHash))
+            if (RegisteredSaveDLLs.TryGetValue(nameHash, out _))
             {
-                Type[] types = FORCE_GET_TYPES(AEM);
-                for (int step = 0; step < types.Length; step++)
-                {
-                    Type typeCase = types[step];
-                    if (typeCase == null)
-                        continue;
-                    foreach (var item in typeCase.GetCustomAttributes())
-                    {
-                        if (item is AutoSaveManagerAttribute)
-                        {
-                            RegisteredManagers.Remove(typeCase);
-                        }
-                        else if (item is AutoSaveComponentAttribute)
-                        {
-                            RegisteredModules.Remove(typeCase);
-                        }
-                    }
-                }
                 RegisteredSaveDLLs.Remove(nameHash);
                 DebugSafeSaves.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
             }
@@ -277,28 +283,8 @@ namespace SafeSaves
         public static void UnregisterSaveSystem(Assembly AEM, Action<bool> OnSave, Action<bool> OnLoad)
         {
             int nameHash = AEM.GetName().Name.GetHashCode();
-            if (RegisteredSaveDLLs.Contains(nameHash))
+            if (RegisteredSaveDLLs.TryGetValue(nameHash, out _))
             {
-                Type[] types = FORCE_GET_TYPES(AEM);
-                for (int step = 0; step < types.Length; step++)
-                {
-                    Type typeCase = types[step];
-                    if (typeCase == null)
-                        continue;
-                    foreach (var item in typeCase.GetCustomAttributes())
-                    {
-                        if (item is AutoSaveManagerAttribute)
-                        {
-                            RegisteredManagers.Remove(typeCase);
-                        }
-                        else if (item is AutoSaveComponentAttribute)
-                        {
-                            RegisteredModules.Remove(typeCase);
-                        }
-                    }
-                }
-                onSaving.Unsubscribe(OnSave);
-                onLoading.Unsubscribe(OnLoad);
                 RegisteredSaveDLLs.Remove(nameHash);
                 DebugSafeSaves.Log("SafeSaves: Un-Registered " + AEM.FullName + " from ManSafeSaves.");
             }
@@ -318,6 +304,31 @@ namespace SafeSaves
                 queued.Clear();
             }
             catch { }
+        }
+
+        internal static HashSet<Type> GetRegisteredModules()
+        {
+            HashSet<Type> allModules = new HashSet<Type>();
+            foreach (var item in RegisteredSaveDLLs)
+            {
+                foreach (var item2 in item.Value.RegisteredModules)
+                {
+                    allModules.Add(item2);
+                }
+            }
+            return allModules;
+        }
+        internal static HashSet<Type> GetRegisteredManagers()
+        {
+            HashSet<Type> allManagers = new HashSet<Type>();
+            foreach (var item in RegisteredSaveDLLs)
+            {
+                foreach (var item2 in item.Value.RegisteredManagers)
+                {
+                    allManagers.Add(item2);
+                }
+            }
+            return allManagers;
         }
 
 
@@ -452,21 +463,77 @@ namespace SafeSaves
             LoadFromFileFormatting(JsonConvert.DeserializeObject<SafeSave>(SafeSaveIn, JSONSaver));
         }
 
+        private static void OnSaving(bool Before)
+        {
+            foreach (var item in RegisteredSaveDLLs)
+            {
+                try
+                {
+                    if (item.Value.onSaving != null)
+                        item.Value.onSaving.Invoke(Before);
+                }
+                catch (Exception e)
+                {
+                    try
+                    {
+                        throw new Exception("SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling " +
+                            item.Value.onSaving.GetMethodInfo().Name + " " + (Before ? "BEFORE" : "AFTER") + " the call to save\n" + e);
+                    }
+                    catch
+                    {
+                        throw new Exception("SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling NULL METHOD " +
+                            (Before ? "BEFORE" : "AFTER") + " the call to SAVE the save\n" + e);
+                    }
+                }
+            }
+        }
+        private static void OnLoading(bool Before)
+        {
+            foreach (var item in RegisteredSaveDLLs)
+            {
+                try
+                {
+                    if (item.Value.onLoading != null)
+                        item.Value.onLoading.Invoke(Before);
+                }
+                catch (Exception e)
+                {
+                    try
+                    {
+                        throw new Exception("SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling " +
+                            item.Value.onLoading.GetMethodInfo().Name + " " + (Before ? "BEFORE" : "AFTER") + " the call to save\n" + e);
+                    }
+                    catch
+                    {
+                        throw new Exception("SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling NULL METHOD " + 
+                            (Before ? "BEFORE" : "AFTER") + " the call to LOAD the save\n" + e);
+                    }
+                }
+            }
+        }
+
         private static SafeSave SaveToFileFormatting(bool defaultState)
         {
-            onSaving.Send(true);
+            try
+            {
+                OnSaving(true);
+            }
+            catch (Exception e)
+            {
+                throw new Exception("RegisterSaveSystem \n" + e);
+            }
             if (defaultState)
             {
                 DebugSafeSaves.Log("SafeSaves: Resetting SafeSave for new save instance...");
                 currentSave = new SafeSave();
             }
             currentSave.SaveStateALL();
-            onSaving.Send(false);
+            OnSaving(false);
             return currentSave;
         }
         private static void LoadFromFileFormatting(SafeSave save)
         {
-            onLoading.Send(true);
+            OnLoading(true);
             if (save == null)
             {
                 DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Save is corrupted!");
@@ -475,43 +542,18 @@ namespace SafeSaves
             }
             currentSave = save;
             currentSave.LoadStateALL();
-            onLoading.Send(false);
+            OnLoading(false);
         }
 
 
-
-        internal static void LoadDataAutomatic()
-        {
-            try
-            {
-                string saveName = Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false);
-                LoadData(saveName, ManGameMode.inst.GetCurrentGameMode());
-                //Debug.Log("SafeSaves: SaveManSubMissions - LoadDataAutomatic: Loaded save " + saveName + " successfully");
-            }
-            catch
-            {
-                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - LoadDataAutomatic: FAILIURE IN MAJOR OPERATION!");
-            }
-        }
-        internal static void SaveDataAutomatic()
-        {
-            try
-            {
-                string saveName = Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false);
-                SaveData(saveName, ManGameMode.inst.GetCurrentGameMode());
-                //Debug.Log("SafeSaves: SaveManSubMissions - SaveDataAutomatic: Saved save " + saveName + " successfully");
-            }
-            catch
-            {
-                DebugSafeSaves.LogError("SafeSaves: ManSafeSaves - SaveDataAutomatic: FAILIURE IN MAJOR OPERATION!");
-            }
-        }
 
 
         internal static void LoadData(string saveName, string altDirectory)
         {
             if (IgnoreSaving)
                 return;
+            if (saveName == null)
+                saveName = Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false);
             string destination = SavesDirectory + up + altDirectory + up + saveName;
             ValidateDirectory(SavesDirectory);
             ValidateDirectory(SavesDirectory + up + altDirectory);
@@ -572,7 +614,7 @@ namespace SafeSaves
                 }
                 catch (Exception e)
                 {
-                    DebugSafeSaves.LogError("SafeSaves: Could not load contents of MissionSave.json/.SMSAV for " + saveName + "!");
+                    DebugSafeSaves.Log("SafeSaves: Could not load contents of MissionSave.json/.SMSAV for " + saveName + "!");
                     DebugSafeSaves.Log(e);
                     return;
                 }
@@ -586,9 +628,10 @@ namespace SafeSaves
                     DebugSafeSaves.Log("SafeSaves: Created new SafeSave.json for " + saveName + " successfully.");
                     return;
                 }
-                catch
+                catch (Exception e)
                 {
                     DebugSafeSaves.Log("SafeSaves: Could not read SafeSave.json for " + saveName + ".  \n   This could be due to a bug with this mod or file permissions.");
+                    DebugSafeSaves.Log(e);
                     return;
                 }
             }
@@ -598,6 +641,8 @@ namespace SafeSaves
         {
             if (IgnoreSaving)
                 return;
+            if (saveName == null)
+                saveName = Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false);
             DebugSafeSaves.Log("SafeSaves: Setting up template reference...");
             string destination = SavesDirectory + up + altDirectory + up + saveName;
             ValidateDirectory(SavesDirectory);
@@ -628,9 +673,10 @@ namespace SafeSaves
                     DebugSafeSaves.Log("SafeSaves: Saved SafeSave.json for " + saveName + " successfully.");
                 }
             }
-            catch
+            catch (Exception e)
             {
-                DebugSafeSaves.LogError("SafeSaves: Could not save SafeSave.json/" + compressFileName + " for " + saveName + ".  \n   This could be due to a bug with this mod or file permissions.");
+                DebugSafeSaves.Log("SafeSaves: Could not save SafeSave.json/" + compressFileName + " for " + saveName + ".  \n   This could be due to a bug with this mod or file permissions.");
+                DebugSafeSaves.Log(e);
                 return;
             }
         }

@@ -17,6 +17,9 @@ namespace SafeSaves
     [Serializable]
     public class SSaveVisibleSerial : SSaveSerial
     {
+        private static bool ContinueLoadingOnErrorAnyways = true;
+
+
         public int visID = 0;       // Host Tank
         public int blockOrder = 0;  // position of the block in save files
         public ObjectTypes objType = ObjectTypes.Null;
@@ -93,7 +96,6 @@ namespace SafeSaves
             corrupted = !SaveModuleOnVisible(toSave);
         }
 
-        private static bool ContinueLoadingAnyways = true;
         internal bool SaveModuleOnVisible(Visible currentInst)
         {
             try
@@ -201,7 +203,7 @@ namespace SafeSaves
                         }
                         if (!worked)
                             DebugSafeSaves.Log("SafeSaves: Could not load items in " + type.ToString() + "!");
-                        if (ContinueLoadingAnyways)
+                        if (ContinueLoadingOnErrorAnyways)
                             return true;
                         return worked;
                     }
@@ -241,7 +243,7 @@ namespace SafeSaves
                         }
                         if (!worked)
                             DebugSafeSaves.Log("SafeSaves: Could not load items in " + type.ToString() + "!");
-                        if (ContinueLoadingAnyways)
+                        if (ContinueLoadingOnErrorAnyways)
                             return true;
                         return worked;
                     }
@@ -255,63 +257,5 @@ namespace SafeSaves
             return false;
         }
       
-        internal bool Autocast<T,C>(T val, FieldInfo saveable, C baseInst)
-        {
-            var valIn = (object)val;
-            if (!LoadState<T>(saveable.Name, valIn, out object valOut))
-            {
-                DebugSafeSaves.Log("SafeSaves: Autocast - Could not load item " + saveable.Name + " of " + type.ToString());
-            }
-            else
-            {
-                if (valOut == null)
-                {
-                    //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " to the Component instance");
-                }
-                else
-                {
-                    try
-                    {
-                        try
-                        {
-                            try
-                            {
-                                try
-                                {
-                                    saveable.SetValue(baseInst, JsonConvert.DeserializeObject(valOut.ToString(), saveable.FieldType));
-                                    //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
-                                    return true;
-                                }
-                                catch
-                                {
-                                    saveable.SetValue(baseInst, Convert.ChangeType(valOut, saveable.FieldType));
-                                    //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
-                                    return true;
-                                }
-                            }
-                            catch
-                            {
-                                saveable.SetValue(baseInst, Convert.ChangeType(Convert.ToInt64(valOut), saveable.FieldType));
-                                //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
-                                return true;
-                            }
-                        }
-                        catch
-                        {
-                            saveable.SetValue(baseInst, Enum.Parse(saveable.FieldType, Convert.ToInt64(valOut).ToString()));
-                            //Debug.Log("SafeSaves: Autocast - Loaded item " + saveable.Name + " of " + type.ToString() + " which is " + (T)valOut);
-                            return true;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        DebugSafeSaves.Log("SafeSaves: Autocast - Failed trying to deal with item " + saveable.Name + " of " + type.ToString() + " which is " + saveable.FieldType.ToString() + ", valOut: " + (T)valOut);
-                        DebugSafeSaves.LogError("SafeSaves: Autocast - Error on operation in " + saveable.Name + " of " + type.ToString() + " | " + e);
-                    }
-                }
-            }
-            return false;
-        }
-
     }
 }
