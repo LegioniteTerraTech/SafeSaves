@@ -476,12 +476,12 @@ namespace SafeSaves
                 {
                     try
                     {
-                        throw new Exception("SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling " +
-                            item.Value.onSaving.GetMethodInfo().Name + " " + (Before ? "BEFORE" : "AFTER") + " the call to save\n" + e);
+                        DebugSafeSaves.CacheException(item.Value, "SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling " +
+                            item.Value.onSaving.GetMethodInfo().Name + " " + (Before ? "BEFORE" : "AFTER") + " the call to SAVE the save\n" + e);
                     }
                     catch
                     {
-                        throw new Exception("SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling NULL METHOD " +
+                        DebugSafeSaves.CacheException(item.Value, "SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling NULL METHOD " +
                             (Before ? "BEFORE" : "AFTER") + " the call to SAVE the save\n" + e);
                     }
                 }
@@ -500,12 +500,12 @@ namespace SafeSaves
                 {
                     try
                     {
-                        throw new Exception("SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling " +
-                            item.Value.onLoading.GetMethodInfo().Name + " " + (Before ? "BEFORE" : "AFTER") + " the call to save\n" + e);
+                        DebugSafeSaves.CacheException(item.Value, "SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling " +
+                            item.Value.onLoading.GetMethodInfo().Name + " " + (Before ? "BEFORE" : "AFTER") + " the call to LOAD the save\n" + e);
                     }
                     catch
                     {
-                        throw new Exception("SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling NULL METHOD " + 
+                        DebugSafeSaves.CacheException(item.Value, "SafeSaves: " + item.Value.DLL.FullName + " encountered a error on calling NULL METHOD " + 
                             (Before ? "BEFORE" : "AFTER") + " the call to LOAD the save\n" + e);
                     }
                 }
@@ -514,14 +514,7 @@ namespace SafeSaves
 
         private static SafeSave SaveToFileFormatting(bool defaultState)
         {
-            try
-            {
-                OnSaving(true);
-            }
-            catch (Exception e)
-            {
-                throw new Exception("RegisterSaveSystem \n" + e);
-            }
+            OnSaving(true);
             if (defaultState)
             {
                 DebugSafeSaves.Log("SafeSaves: Resetting SafeSave for new save instance...");
@@ -529,6 +522,8 @@ namespace SafeSaves
             }
             currentSave.SaveStateALL();
             OnSaving(false);
+            if (DebugSafeSaves.GetSubExceptions(out string errors, "while saving"))
+                DebugSafeSaves.Log(errors);
             return currentSave;
         }
         private static void LoadFromFileFormatting(SafeSave save)
@@ -543,6 +538,8 @@ namespace SafeSaves
             currentSave = save;
             currentSave.LoadStateALL();
             OnLoading(false);
+            if (DebugSafeSaves.GetSubExceptions(out string errors, "while loading"))
+                DebugSafeSaves.Log(errors);
         }
 
 

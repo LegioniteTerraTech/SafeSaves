@@ -35,6 +35,39 @@ namespace SafeSaves
                 return;
             UnityEngine.Debug.Log(message + "\n" + StackTraceUtility.ExtractStackTrace().ToString());
         }
+        private static List<KeyValuePair<ManagedDLL, string>> subExceptions = new List<KeyValuePair<ManagedDLL, string>>();
+        internal static void CacheException(ManagedDLL cause, string message)
+        {
+            string subEx = message + "\n" + StackTraceUtility.ExtractStackTrace().ToString();
+            UnityEngine.Debug.Log(subEx);
+            subExceptions.Add(new KeyValuePair<ManagedDLL, string>(cause, subEx));
+        }
+        internal static bool GetSubExceptions(out string ex, string onAction)
+        {
+            if (subExceptions.Count == 0)
+            {
+                ex = null;
+                return false;
+            }
+            StringBuilder SB = new StringBuilder();
+            SB.Append("\n---------------------------------------------------------\n");
+            SB.Append("---------------------------------------------------------\n");
+            SB.Append("SafeSaves: The following mods had errors " + onAction + ":\n");
+            foreach (var item in subExceptions)
+            {
+                SB.Append(item.Key.DLL.FullName + ", ");
+            }
+            SB.Append("\nTechnical Details:\n");
+            foreach (var item in subExceptions)
+            {
+                SB.Append(item.Value + "\n");
+            }
+            SB.Append("\n---------------------------------------------------------\n");
+            SB.Append("---------------------------------------------------------\n");
+            subExceptions.Clear();
+            ex = SB.ToString();
+            return true;
+        }
         internal static void LogError(string message)
         {
             if (!ShouldLog)
