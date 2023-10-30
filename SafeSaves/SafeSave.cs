@@ -14,11 +14,39 @@ namespace SafeSaves
     /// <summary>
     /// Stores general information for various blocks, Techs, even the world.
     /// </summary>
-    public class SafeSave
+    public class SafeSave : Mode.IManagerModeEvents
     {
         public List<SSaveManagerSerial> AllManagerEntries = new List<SSaveManagerSerial>();
         public Dictionary<int, List<SSaveVisibleSerial>> AllVisibleEntries = new Dictionary<int, List<SSaveVisibleSerial>>();
-        
+
+        public void ModeStart(ManSaveGame.State optionalLoadState)
+        {
+            DebugSafeSaves.Log("ModeStart for SafeSave was called.  Were we on time?");
+        }
+
+        public void Save(ManSaveGame.State saveState)
+        {
+            DebugSafeSaves.Log("Save for SafeSave was called.  Were we on time?");
+            DebugSafeSaves.Log("SafeSaves: Saving!");
+            saveState.AddSaveData(ManSafeSaves.safeSaveJsonType, this);
+        }
+
+        public void ModeExit()
+        {
+            DebugSafeSaves.Log("ModeExit for SafeSave was called.  Were we on time?");
+            ClearSave();
+        }
+        public void ClearSave()
+        {
+            AllManagerEntries.Clear();
+            AllVisibleEntries.Clear();
+        }
+        public void SetSave(SafeSave save)
+        {
+            ClearSave();
+            AllManagerEntries = save.AllManagerEntries;
+            AllVisibleEntries = save.AllVisibleEntries;
+        }
 
         internal void SaveStateALL()
         {

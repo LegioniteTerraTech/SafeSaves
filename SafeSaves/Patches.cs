@@ -243,8 +243,8 @@ namespace SafeSaves
         {
             private static void Prefix(ref ManGameMode.GameType gameType, ref string saveName)
             {
-                DebugSafeSaves.Log("SafeSaves: Saving!");
-                ManSafeSaves.SaveData(saveName, ManGameMode.inst.GetCurrentGameMode());
+                DebugSafeSaves.Log("SafeSaves: Saving Backup!");
+                ManSafeSaves.SaveDataExtBackup(saveName, ManGameMode.inst.GetCurrentGameMode());
             }
         }
     }
