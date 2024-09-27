@@ -10,13 +10,14 @@ using Newtonsoft.Json;
 
 namespace SafeSaves
 {
-
+    [Serializable]
     /// <summary>
     /// Stores general information for various blocks, Techs, even the world.
     /// </summary>
     public class SafeSave : Mode.IManagerModeEvents
     {
         public List<SSaveManagerSerial> AllManagerEntries = new List<SSaveManagerSerial>();
+        public int revision = 0;
         public Dictionary<int, List<SSaveVisibleSerial>> AllVisibleEntries = new Dictionary<int, List<SSaveVisibleSerial>>();
 
         public void ModeStart(ManSaveGame.State optionalLoadState)

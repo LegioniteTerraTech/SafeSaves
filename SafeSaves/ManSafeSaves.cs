@@ -44,6 +44,7 @@ namespace SafeSaves
     public class ManSafeSaves : MonoBehaviour
     {
         public static bool UseCompressor = false;
+        public const int revision = 2;
 
         internal static string DLLDirectory;
         internal static string SavesDirectory;
@@ -164,7 +165,7 @@ namespace SafeSaves
                 if (saver.IsSaveNameAutoSave(saver.GetCurrentSaveName(false)))
                 {
                     DebugSafeSaves.Log("SafeSaves: ManSafeSaves Saving!");
-                    SaveDataExtBackup(null, ManGameMode.inst.GetCurrentGameMode());
+                    SaveData(null, ManGameMode.inst.GetCurrentGameMode());
                 }
             }
         }
@@ -484,9 +485,9 @@ namespace SafeSaves
         }
 
 
-        private static string SerializeFromManager(bool defaultState = false)
+        private static string SerializeFromManager()
         {
-            return JsonConvert.SerializeObject(SaveToFileFormatting(defaultState), UseCompressor ? Formatting.None : Formatting.Indented, JSONSaver);
+            return JsonConvert.SerializeObject(SaveToFileFormatting(), UseCompressor ? Formatting.None : Formatting.Indented, JSONSaver);
         }
         private static void DeserializeToManager(string SafeSaveIn)
         {
@@ -542,23 +543,14 @@ namespace SafeSaves
             }
         }
 
-        private static SafeSave SaveToFileFormatting(bool defaultState)
+        private static SafeSave SaveToFileFormatting()
         {
-            OnSaving(true);
-            if (defaultState)
-            {
-                DebugSafeSaves.Log("SafeSaves: Resetting SafeSave for new save instance...");
-                currentSave.ClearSave();
-            }
-            currentSave.SaveStateALL();
-            OnSaving(false);
             if (DebugSafeSaves.GetSubExceptions(out string errors, "while saving"))
                 DebugSafeSaves.Log(errors);
             return currentSave;
         }
         private static void LoadFromFileFormatting(SafeSave save)
         {
-            OnLoading(true);
             if (save == null)
             {
                 DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Save is corrupted!");
@@ -566,7 +558,6 @@ namespace SafeSaves
                 return;
             }
             currentSave.LoadStateALL();
-            OnLoading(false);
             if (DebugSafeSaves.GetSubExceptions(out string errors, "while loading"))
                 DebugSafeSaves.Log(errors);
         }
@@ -580,10 +571,19 @@ namespace SafeSaves
                 saveName = Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false);
             if (saveName.NullOrEmpty())
                 return;
-            if (ManSaveGame.inst.CurrentState.GetSaveData(safeSaveJsonType, out SafeSave data))
+            OnLoading(true);
+            if (ManSaveGame.inst.CurrentState.GetSaveData(safeSaveJsonType, out SafeSave data) && 
+                data.revision == revision && !Input.GetKey(KeyCode.Escape))
             {
                 DebugSafeSaves.Log("Loading from save file...");
                 currentSave.SetSave(data);
+                if (currentSave == null)
+                {
+                    DebugSafeSaves.Log("SafeSaves: ManSafeSaves - Save is corrupted!");
+                    currentSave.ClearSave();
+                    return;
+                }
+                currentSave.LoadStateALL();
                 DebugSafeSaves.Log("Loaded from save file successfully.");
             }
             else
@@ -592,6 +592,7 @@ namespace SafeSaves
                 DebugSafeSaves.Log("Loading from external backup save file...");
                 LoadDataExtBackup(saveName, altDirectory);
             }
+            OnLoading(false);
         }
         internal static void LoadDataExtBackup(string saveName, string altDirectory)
         {
@@ -665,7 +666,10 @@ namespace SafeSaves
             {
                 try
                 {
-                    File.WriteAllText(destination + ".json", SerializeFromManager(true));
+                    DebugSafeSaves.Log("SafeSaves: Resetting SafeSave for new save instance...");
+                    currentSave.ClearSave();
+                    currentSave.SaveStateALL();
+                    File.WriteAllText(destination + ".json", SerializeFromManager());
                     DebugSafeSaves.Log("SafeSaves: Created new SafeSave.json for " + saveName + " successfully.");
                     return;
                 }
@@ -678,6 +682,28 @@ namespace SafeSaves
             }
         }
 
+        internal static void SaveData(string saveName, string altDirectory)
+        {
+            if (IgnoreSaving)
+                return;
+            if (saveName == null)
+                saveName = Singleton.Manager<ManSaveGame>.inst.GetCurrentSaveName(false);
+            if (saveName.NullOrEmpty())
+                return;
+            currentSave.revision = revision;
+            OnSaving(true);
+            currentSave.SaveStateALL();
+            try
+            {
+                ManSaveGame.inst.CurrentState.AddSaveData(safeSaveJsonType, currentSave);
+            }
+            catch (Exception e)
+            {
+                DebugSafeSaves.Log("SafeSaves - Was not able to save to the save file directly - " + e);
+            }
+            SaveDataExtBackup(saveName, altDirectory);
+            OnSaving(false);
+        }
         internal static void SaveDataExtBackup(string saveName, string altDirectory)
         {
             if (IgnoreSaving || DisableExternalBackupSaving)
@@ -693,7 +719,6 @@ namespace SafeSaves
             ValidateDirectory(Path.Combine(SavesDirectory, altDirectory));
             try
             {
-
                 if (UseCompressor)
                 {
                     using (FileStream FS = File.Create(destination + compressFileName))
